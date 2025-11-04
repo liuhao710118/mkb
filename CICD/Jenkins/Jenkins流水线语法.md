@@ -659,6 +659,27 @@ pipeline {
 
 ## environment（环境变量）
 
+### 常见内置环境变量（示例与说明）
+
+| 变量名            | 示例值                                 | 说明                                                      |
+| ----------------- | -------------------------------------- | --------------------------------------------------------- |
+| `BUILD_ID`        | 2025-10-30_09-40-18                    | 当前构建 ID。对于 Jenkins 1.597+ 与 `BUILD_NUMBER` 相同。 |
+| `BUILD_NUMBER`    | 153                                    | 当前构建号。                                              |
+| `BUILD_TAG`       | jenkins-MyJob-17                       | 可用于打包、标识构建产物。                                |
+| `BUILD_URL`       | http://jenkins/job/MyJob/17/           | 当前构建的 URL。                                          |
+| `EXECUTOR_NUMBER` | 0                                      | 执行该构建的执行器编号（从 0 开始）。                     |
+| `JAVA_HOME`       | /usr/lib/jvm/java-17                   | 当前任务使用的 JDK 路径。                                 |
+| `JENKINS_URL`     | https://jenkins.example.com/           | Jenkins 主 URL。                                          |
+| `JOB_NAME`        | my-pipeline                            | 任务名。                                                  |
+| `NODE_NAME`       | build-node-1                           | 运行任务的节点名。                                        |
+| `WORKSPACE`       | /var/lib/jenkins/workspace/my-pipeline | 构建工作目录。                                            |
+
+> 更多变量请参考 `${YOUR_JENKINS_URL}/pipeline-syntax/globals#env`。
+
+---
+
+
+
 `environment` 指令用于定义 **环境变量（key-value 键值对）**，可以应用到整个 Pipeline 或特定阶段。
 
 - 顶层定义：对整个 Pipeline 所有步骤生效
@@ -764,9 +785,7 @@ pipeline {
 - `environment` 可以在 Pipeline 顶层或阶段内定义
 - 可结合 Jenkins 凭据（Secret Text / Secret File / Username/Password / SSH Key）使用
 - 阶段级环境变量只对当前阶段有效，顶层环境变量对整个 Pipeline 生效
-- 使用凭据时推荐 `credentials()` 方法，安全且方便管理
-
-好的，我将 **`options` 指令** 内容整理成中文易懂文档，并附示例，涵盖 Pipeline 全局选项和阶段级选项。
+- 使用凭据时推荐 `credentials()` 方法，安全且方便管理。
 
 ------
 
@@ -1202,8 +1221,6 @@ pipeline {
 - 部署阶段确认：生产环境部署前手动确认
 - 动态参数输入：根据用户选择或输入调整后续执行逻辑
 - 结合 `when` 条件，实现更智能的阶段控制
-
-好的，我将 **`when` 指令** 整理成中文易懂文档，并配合示例。
 
 ------
 

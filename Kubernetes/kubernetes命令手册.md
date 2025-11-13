@@ -242,12 +242,6 @@ kubectl create service nodeport web-svc --tcp=80:80 --namespace=webapp
 
 ------
 
-好的 ✅
- 以下是一份完整、结构化、可直接作为学习或培训资料使用的 **《kubectl delete 命令使用教程》**。
- 内容包含命令功能、语法、使用示例、参数说明、注意事项、错误排查与最佳实践。
-
-------
-
 # 🧭 kubectl delete 命令使用教程
 
 ## 一、命令概述
@@ -808,13 +802,6 @@ spec:
 | 指定 API 版本  | `kubectl explain deployment --api-version=apps/v1` |
 | 结合 grep 过滤 | `kubectl explain pod --recursive                   |
 
-
-
-好的 ✅
- 以下是一份结构清晰、适合教学、内部培训或项目文档使用的
- **《kubectl expose 命令使用教程》**。
- 内容包括命令说明、语法、示例、选项说明、常见错误及最佳实践。
-
 ------
 
 # 🧭 kubectl expose 命令使用教程
@@ -1067,3 +1054,898 @@ http://<NodeIP>:30574
 
 `kubectl expose` 是一个功能简洁却非常实用的命令，用于快速生成 Service，从而让应用在集群内部或外部被访问。
  掌握其常用参数和类型（`ClusterIP`、`NodePort`、`LoadBalancer`、`ExternalName`）后，可以灵活应对不同的服务暴露需求
+
+
+
+# 📘 kubectl logs 命令使用教程
+
+## 一、命令概述
+
+`kubectl logs` 是 Kubernetes 中用于**查看 Pod 中容器日志输出**的命令。
+ 它帮助开发者或运维人员快速排查容器运行问题、调试应用、监控运行状态。
+
+Pod 中每个容器的标准输出（`stdout`）和标准错误输出（`stderr`）都会被 Kubernetes 收集，
+ 而 `kubectl logs` 就是读取这些日志的主要方式。
+
+------
+
+## 二、命令语法
+
+```bash
+kubectl logs [POD_NAME] [-c CONTAINER_NAME] [flags]
+```
+
+### 或查看某个 Job/Deployment 对应 Pod 的日志：
+
+```bash
+kubectl logs job/<job-name>
+kubectl logs deployment/<deploy-name> -l app=myapp
+```
+
+------
+
+## 三、常用参数说明
+
+| 参数                                | 说明                                             |
+| ----------------------------------- | ------------------------------------------------ |
+| `<pod>`                             | 指定 Pod 名称                                    |
+| `-c, --container`                   | 指定 Pod 中的容器名称（当 Pod 有多个容器时必须） |
+| `-f, --follow`                      | 实时持续输出日志（类似 `tail -f`）               |
+| `--tail=N`                          | 仅显示最后 N 行日志                              |
+| `--since=5m`                        | 显示最近 5 分钟的日志                            |
+| `--since-time=2025-11-13T09:00:00Z` | 显示指定时间之后的日志                           |
+| `--limit-bytes=N`                   | 限制输出的日志字节数                             |
+| `--timestamps`                      | 在每行日志前显示时间戳                           |
+| `-l, --selector`                    | 按标签选择 Pod                                   |
+| `--previous`                        | 查看容器上一次崩溃（重启前）的日志               |
+| `--namespace`                       | 指定命名空间                                     |
+
+------
+
+## 四、基本用法
+
+### 1️⃣ 查看单个 Pod 的日志
+
+```bash
+kubectl logs my-pod
+```
+
+显示 Pod 中第一个容器的日志（如果只有一个容器）。
+
+------
+
+### 2️⃣ 指定容器查看日志
+
+```bash
+kubectl logs my-pod -c nginx
+```
+
+当一个 Pod 含多个容器时，必须使用 `-c` 指定容器名。
+
+------
+
+### 3️⃣ 实时查看日志（持续输出）
+
+```bash
+kubectl logs -f my-pod
+```
+
+> 类似 Linux 命令 `tail -f`，会持续输出新增日志。
+
+------
+
+### 4️⃣ 查看最近 N 行日志
+
+```bash
+kubectl logs my-pod --tail=100
+```
+
+仅显示最后 100 行。
+
+------
+
+### 5️⃣ 查看指定时间范围的日志
+
+```bash
+kubectl logs my-pod --since=10m
+```
+
+显示最近 10 分钟的日志。
+
+------
+
+### 6️⃣ 显示带时间戳的日志
+
+```bash
+kubectl logs my-pod --timestamps
+```
+
+------
+
+### 7️⃣ 查看崩溃重启前的日志
+
+```bash
+kubectl logs my-pod --previous
+```
+
+用于调试 Pod 因错误重启的情况（CrashLoopBackOff）。
+
+------
+
+### 8️⃣ 查看命名空间中的 Pod 日志
+
+```bash
+kubectl logs my-pod -n test
+```
+
+------
+
+### 9️⃣ 查看带标签的多个 Pod 日志
+
+```bash
+kubectl logs -l app=nginx
+```
+
+或实时查看：
+
+```bash
+kubectl logs -f -l app=nginx
+```
+
+------
+
+## 五、进阶用法
+
+### 1️⃣ 查看 Deployment 对应 Pod 的日志
+
+```bash
+kubectl logs deployment/nginx-deployment
+```
+
+或使用标签：
+
+```bash
+kubectl logs -l app=nginx
+```
+
+------
+
+### 2️⃣ 查看 Job 的日志
+
+```bash
+kubectl logs job/my-batch-job
+```
+
+------
+
+### 3️⃣ 查看所有 Pod 的日志（带标签）
+
+```bash
+kubectl logs -f -l app=myapp --all-containers=true
+```
+
+------
+
+### 4️⃣ 同时查看多个容器日志
+
+```bash
+kubectl logs my-pod --all-containers=true
+```
+
+------
+
+### 5️⃣ 限制输出大小
+
+```bash
+kubectl logs my-pod --limit-bytes=50000
+```
+
+仅显示最多 50KB 的日志。
+
+------
+
+### 6️⃣ 输出到文件保存
+
+```bash
+kubectl logs my-pod > pod.log
+```
+
+或带时间戳：
+
+```bash
+kubectl logs my-pod --timestamps > pod.log
+```
+
+------
+
+## 六、常见错误与解决方案
+
+| 错误信息                                                     | 原因                   | 解决方法                           |
+| ------------------------------------------------------------ | ---------------------- | ---------------------------------- |
+| `Error from server (BadRequest): container ... not found`    | Pod 有多个容器但未指定 | 使用 `-c` 参数指定容器名           |
+| `Error from server (NotFound): pods "xxx" not found`         | Pod 名称或命名空间错误 | 检查命名空间或 Pod 名称            |
+| `Error from server (BadRequest): previous terminated container not found` | 容器未重启             | 去掉 `--previous` 参数             |
+| `no logs available`                                          | Pod 尚未启动或无输出   | 检查 Pod 状态（`kubectl get pod`） |
+| `a container name must be specified`                         | Pod 有多个容器         | 加 `-c` 指定容器名                 |
+
+------
+
+## 七、实战案例
+
+### 🧩 1. 调试崩溃容器
+
+```bash
+kubectl get pod my-pod
+# 状态为 CrashLoopBackOff
+kubectl logs my-pod --previous
+```
+
+### 🧩 2. 实时监控服务日志
+
+```bash
+kubectl logs -f -l app=web --all-containers
+```
+
+### 🧩 3. 获取日志并保存到文件
+
+```bash
+kubectl logs -f my-pod > /var/logs/my-pod.log
+```
+
+### 🧩 4. 调试命名空间内多个 Pod
+
+```bash
+kubectl logs -l app=nginx -n production
+```
+
+------
+
+## 八、与其他命令的配合使用
+
+| 命令                   | 功能                | 组合示例                             |
+| ---------------------- | ------------------- | ------------------------------------ |
+| `kubectl get pods`     | 查看 Pod 名称       | `kubectl get pods -n test`           |
+| `kubectl describe pod` | 查看 Pod 事件与状态 | `kubectl describe pod my-pod`        |
+| `kubectl exec`         | 进入容器调试        | `kubectl exec -it my-pod -- /bin/sh` |
+| `kubectl logs`         | 查看日志输出        | `kubectl logs -f my-pod`             |
+
+------
+
+## 九、最佳实践建议
+
+✅ **使用标签选择器**查看日志，减少手动输入 Pod 名。
+ ✅ **配合 `-f` 实时监控**运行状态。
+ ✅ **CrashLoopBackOff 调试**时务必使用 `--previous`。
+ ✅ **日志量大时使用 `--tail` 或 `--since`** 限制输出。
+ ✅ **对多容器 Pod 加 `--all-containers=true`**。
+ ✅ **可通过重定向输出保存日志以备分析**。
+ ✅ **在生产环境中推荐使用集中式日志系统（如 ELK、Loki）**。
+
+------
+
+## 十、命令速查表
+
+| 功能                 | 命令示例                                    |
+| -------------------- | ------------------------------------------- |
+| 查看 Pod 日志        | `kubectl logs my-pod`                       |
+| 查看指定容器日志     | `kubectl logs my-pod -c nginx`              |
+| 实时输出日志         | `kubectl logs -f my-pod`                    |
+| 查看最近 100 行日志  | `kubectl logs my-pod --tail=100`            |
+| 查看最近 5 分钟日志  | `kubectl logs my-pod --since=5m`            |
+| 查看崩溃容器日志     | `kubectl logs my-pod --previous`            |
+| 查看带标签的多个 Pod | `kubectl logs -l app=web`                   |
+| 查看所有容器日志     | `kubectl logs my-pod --all-containers=true` |
+| 输出日志到文件       | `kubectl logs my-pod > my-pod.log`          |
+
+------
+
+## 十一、总结
+
+`kubectl logs` 是 Kubernetes 日常运维和调试中最常用的诊断命令之一。
+ 它让你能够快速获取容器输出日志，分析服务异常、启动错误、网络故障等问题。
+
+> 📖 一句话总结：
+>  **`kubectl logs` 是容器世界里的 “tail -f”，
+>  让你直接看到应用在集群中的真实运行状态。**
+
+------
+
+
+
+# 📘 kubectl set 命令使用教程
+
+## 一、命令概述
+
+`kubectl set` 是 Kubernetes 中用于**修改现有资源的属性**的命令集合。
+ 它不是单一命令，而是一组 **子命令（subcommands）** 的集合，可用来动态修改资源的镜像、环境变量、资源限制、服务账号等配置。
+
+换句话说：
+
+> `kubectl apply` 修改资源是“声明式”的（改 YAML 文件），
+>  而 `kubectl set` 修改资源是“命令式”的（直接执行命令）。
+
+------
+
+## 二、命令语法
+
+```bash
+kubectl set SUBCOMMAND [OPTIONS]
+```
+
+常用子命令包括：
+
+| 子命令           | 功能                                             |
+| ---------------- | ------------------------------------------------ |
+| `image`          | 更新容器镜像                                     |
+| `env`            | 设置或移除环境变量                               |
+| `resources`      | 更新 CPU / 内存 限制                             |
+| `selector`       | 更新资源的标签选择器                             |
+| `serviceaccount` | 指定使用的 ServiceAccount                        |
+| `subject`        | 修改 RoleBinding 或 ClusterRoleBinding 的主体    |
+| `volume`         | 修改 Pod 的挂载卷                                |
+| `probe`          | 配置健康检查（liveness/readiness/startup probe） |
+
+------
+
+## 三、常用子命令详解
+
+------
+
+### 🧩 1️⃣ `kubectl set image`
+
+**功能：** 修改 Pod/Deployment/DaemonSet/StatefulSet 的容器镜像。
+
+#### 基本语法：
+
+```bash
+kubectl set image <resource>/<name> <container>=<image> [options]
+```
+
+#### 示例：
+
+修改 Deployment 中的镜像：
+
+```bash
+kubectl set image deployment/nginx-deploy nginx=nginx:1.25
+```
+
+一次修改多个容器：
+
+```bash
+kubectl set image deployment/web web=nginx:1.25 sidecar=busybox
+```
+
+强制回滚：
+
+```bash
+kubectl rollout undo deployment/nginx-deploy
+```
+
+验证修改结果：
+
+```bash
+kubectl get deployment nginx-deploy -o wide
+```
+
+------
+
+### 🧩 2️⃣ `kubectl set env`
+
+**功能：** 设置或删除资源的环境变量。
+
+#### 基本语法：
+
+```bash
+kubectl set env <resource>/<name> KEY=VALUE [options]
+```
+
+#### 示例：
+
+为 Deployment 添加环境变量：
+
+```bash
+kubectl set env deployment/nginx-deploy ENV=prod LOG_LEVEL=info
+```
+
+删除环境变量：
+
+```bash
+kubectl set env deployment/nginx-deploy ENV-
+```
+
+从 ConfigMap 或 Secret 引入环境变量：
+
+```bash
+kubectl set env deployment/web --from=configmap/app-config
+kubectl set env deployment/web --from=secret/db-secret
+```
+
+------
+
+### 🧩 3️⃣ `kubectl set resources`
+
+**功能：** 动态调整容器的资源请求和限制。
+
+#### 基本语法：
+
+```bash
+kubectl set resources <resource>/<name> -c <container> \
+  --limits=cpu=500m,memory=256Mi --requests=cpu=200m,memory=128Mi
+```
+
+#### 示例：
+
+修改 Deployment 中的资源配置：
+
+```bash
+kubectl set resources deployment/nginx-deploy -c nginx \
+  --limits=cpu=1000m,memory=512Mi --requests=cpu=250m,memory=128Mi
+```
+
+------
+
+### 🧩 4️⃣ `kubectl set serviceaccount`
+
+**功能：** 修改 PodTemplate 中使用的 ServiceAccount。
+
+#### 示例：
+
+```bash
+kubectl set serviceaccount deployment/nginx-deploy nginx-sa
+```
+
+> 用于让 Pod 以特定的 ServiceAccount 身份运行（影响访问权限）。
+
+------
+
+### 🧩 5️⃣ `kubectl set selector`
+
+**功能：** 修改资源的标签选择器（仅部分资源支持）。
+
+#### 示例：
+
+```bash
+kubectl set selector service/my-svc app=myapp,env=prod
+```
+
+------
+
+### 🧩 6️⃣ `kubectl set subject`
+
+**功能：** 修改 RBAC 中的角色绑定主体（RoleBinding / ClusterRoleBinding）。
+
+#### 示例：
+
+为 RoleBinding 添加新用户：
+
+```bash
+kubectl set subject rolebinding admin --user=alice
+```
+
+删除某个用户：
+
+```bash
+kubectl set subject rolebinding admin --remove --user=bob
+```
+
+------
+
+### 🧩 7️⃣ `kubectl set volume`
+
+**功能：** 为 Deployment / PodTemplate 设置或更新卷挂载。
+
+#### 示例：
+
+```bash
+kubectl set volume deployment/nginx-deploy --add \
+  --name=config-volume --mount-path=/etc/nginx/conf.d --configmap-name=nginx-config
+```
+
+删除卷挂载：
+
+```bash
+kubectl set volume deployment/nginx-deploy --remove --name=config-volume
+```
+
+------
+
+### 🧩 8️⃣ `kubectl set probe`
+
+**功能：** 设置容器健康检查探针（Kubernetes v1.18+）。
+
+#### 示例：
+
+为容器添加 liveness probe：
+
+```bash
+kubectl set probe deployment/nginx-deploy --liveness \
+  --get-url=http://:80/healthz --initial-delay-seconds=10
+```
+
+添加 readiness probe：
+
+```bash
+kubectl set probe deployment/nginx-deploy --readiness \
+  --get-url=http://:80/ready --initial-delay-seconds=5
+```
+
+------
+
+## 四、常用选项（Flags）
+
+| 参数               | 说明                           |
+| ------------------ | ------------------------------ |
+| `--dry-run=client` | 仅输出修改结果，不实际应用     |
+| `-o yaml/json`     | 输出修改后的 YAML/JSON         |
+| `--all`            | 作用于所有匹配资源             |
+| `-l, --selector`   | 使用标签选择器过滤目标资源     |
+| `--record`         | 在 annotation 中记录命令历史   |
+| `--overwrite`      | 覆盖已存在的字段（如环境变量） |
+
+------
+
+## 五、典型用法示例
+
+| 场景                  | 命令示例                                                     |
+| --------------------- | ------------------------------------------------------------ |
+| 修改镜像版本          | `kubectl set image deployment/web web=nginx:1.25`            |
+| 添加环境变量          | `kubectl set env deployment/web LOG_LEVEL=debug`             |
+| 删除环境变量          | `kubectl set env deployment/web LOG_LEVEL-`                  |
+| 从 ConfigMap 导入变量 | `kubectl set env deployment/web --from=configmap/app-config` |
+| 调整资源限制          | `kubectl set resources deployment/web --limits=cpu=500m,memory=256Mi` |
+| 指定 ServiceAccount   | `kubectl set serviceaccount deployment/web web-sa`           |
+| 添加卷挂载            | `kubectl set volume deployment/web --add --name=app-config --configmap-name=config` |
+| 设置健康检查          | `kubectl set probe deployment/web --liveness --get-url=http://:8080/health` |
+
+------
+
+## 六、查看修改结果
+
+修改后可立即查看效果：
+
+```bash
+kubectl get deployment web -o yaml
+```
+
+或查看 Pod 实际状态：
+
+```bash
+kubectl describe pod <pod-name>
+```
+
+------
+
+## 七、与其他命令的对比
+
+| 命令            | 功能                          | 特点                 |
+| --------------- | ----------------------------- | -------------------- |
+| `kubectl edit`  | 打开资源配置文件进行编辑      | 手动修改 YAML        |
+| `kubectl patch` | 通过 JSON/YAML Patch 更新字段 | 适合精确修改         |
+| `kubectl set`   | 通过命令式方式修改属性        | 简单高效             |
+| `kubectl apply` | 声明式更新资源                | 推荐用于生产配置管理 |
+
+------
+
+## 八、常见错误与解决方案
+
+| 错误                         | 原因                            | 解决方法                     |
+| ---------------------------- | ------------------------------- | ---------------------------- |
+| `error: no resources found`  | 资源不存在或命名空间错误        | 检查名称与命名空间           |
+| `field is immutable`         | 修改了不可变字段（如 selector） | 删除后重新创建资源           |
+| `invalid key=value`          | 环境变量语法错误                | 确保使用正确格式 `KEY=VALUE` |
+| `error: container not found` | Pod 中无指定容器                | 使用 `-c` 指定容器名         |
+
+------
+
+## 九、最佳实践
+
+✅ 使用 `--dry-run=client -o yaml` 预览修改效果
+ ✅ 避免直接在生产环境使用 `set` 修改关键参数（建议使用 `apply`）
+ ✅ 修改镜像后立即执行 `kubectl rollout status` 监控部署进度
+ ✅ 使用标签选择器配合 `--all` 批量更新
+ ✅ 对资源限制、环境变量变更建议纳入版本控制
+
+------
+
+## 十、命令速查表
+
+| 功能                  | 命令                                                         |
+| --------------------- | ------------------------------------------------------------ |
+| 修改镜像              | `kubectl set image deployment/web web=nginx:1.25`            |
+| 添加环境变量          | `kubectl set env deployment/web ENV=prod`                    |
+| 从 ConfigMap 导入变量 | `kubectl set env deployment/web --from=configmap/app-config` |
+| 调整资源限制          | `kubectl set resources deployment/web --limits=cpu=1,memory=512Mi` |
+| 修改 ServiceAccount   | `kubectl set serviceaccount deployment/web web-sa`           |
+| 修改卷挂载            | `kubectl set volume deployment/web --add --name=config --configmap-name=cfg` |
+| 修改探针              | `kubectl set probe deployment/web --liveness --get-url=http://:80/health` |
+
+------
+
+## 十一、总结
+
+`kubectl set` 是一个强大、灵活的命令集，
+ 可在不修改 YAML 文件的情况下快速调整资源配置。
+ 它适合临时修正配置、调试、或批量变更操作。
+
+> 📖 一句话总结：
+>  **“kubectl apply 管理配置文件，kubectl set 快速修改运行中对象。”**
+
+
+
+# 📘kubectl exec 命令使用教程
+
+------
+
+## 一、命令概述
+
+`kubectl exec` 是 Kubernetes 中非常常用的命令之一，
+ 用于在 **Pod 的容器内执行命令**，类似于通过 `docker exec` 进入容器。
+
+它常被用于：
+
+- 进入容器排查问题；
+- 查看运行时日志或配置；
+- 执行临时调试命令；
+- 启动交互式 Shell。
+
+------
+
+## 二、命令语法
+
+```bash
+kubectl exec [options] POD [-c CONTAINER] -- COMMAND [args...]
+```
+
+或交互式执行：
+
+```bash
+kubectl exec -it POD [-c CONTAINER] -- /bin/sh
+```
+
+------
+
+## 三、参数说明
+
+| 参数              | 说明                                                  |
+| ----------------- | ----------------------------------------------------- |
+| `POD`             | 目标 Pod 的名称                                       |
+| `-c, --container` | 指定要进入的容器名称（一个 Pod 有多个容器时必须指定） |
+| `-i`              | 保持标准输入（stdin）打开，用于交互式命令             |
+| `-t`              | 分配一个伪终端（tty）                                 |
+| `--namespace`     | 指定命名空间（默认为 default）                        |
+| `--`              | 分隔符，表示后面为要执行的命令                        |
+| `--stdin`         | 与 `-i` 类似，保持标准输入打开                        |
+| `--tty`           | 与 `-t` 类似，分配 TTY 终端                           |
+
+------
+
+## 四、常用示例
+
+### 🧩 1️⃣ 在容器中执行单条命令
+
+```bash
+kubectl exec my-pod -- ls /usr/share/nginx/html
+```
+
+------
+
+### 🧩 2️⃣ 进入容器的交互式 Shell
+
+```bash
+kubectl exec -it my-pod -- /bin/bash
+```
+
+或容器使用 `sh`：
+
+```bash
+kubectl exec -it my-pod -- /bin/sh
+```
+
+> 💡 **提示**：部分镜像（如 `nginx`、`busybox`）不包含 bash，需要改用 `/bin/sh`。
+
+------
+
+### 🧩 3️⃣ 指定容器名称执行命令
+
+如果一个 Pod 有多个容器，例如：
+
+```bash
+kubectl get pod my-pod -o jsonpath='{.spec.containers[*].name}'
+```
+
+输出：
+
+```
+nginx sidecar
+```
+
+则执行命令时要加 `-c` 参数：
+
+```bash
+kubectl exec -it my-pod -c sidecar -- /bin/sh
+```
+
+------
+
+### 🧩 4️⃣ 查看容器环境变量
+
+```bash
+kubectl exec my-pod -- printenv
+```
+
+------
+
+### 🧩 5️⃣ 执行脚本或多条命令
+
+执行多条命令：
+
+```bash
+kubectl exec my-pod -- sh -c "cd /tmp && ls && cat file.txt"
+```
+
+执行脚本文件：
+
+```bash
+kubectl exec my-pod -- sh -c "/scripts/run.sh"
+```
+
+------
+
+### 🧩 6️⃣ 跨命名空间执行命令
+
+```bash
+kubectl exec -n kube-system -it coredns-xxxxx -- sh
+```
+
+------
+
+### 🧩 7️⃣ 与 `kubectl cp` 配合使用
+
+先将脚本复制进 Pod：
+
+```bash
+kubectl cp ./test.sh my-pod:/tmp/test.sh
+```
+
+再执行：
+
+```bash
+kubectl exec my-pod -- sh /tmp/test.sh
+```
+
+------
+
+## 五、进阶用法
+
+### ✅ 在多个 Pod 中批量执行命令（配合 `xargs`）
+
+```bash
+kubectl get pods -l app=nginx -o name | xargs -I {} kubectl exec {} -- hostname
+```
+
+------
+
+### ✅ 查看容器日志文件
+
+```bash
+kubectl exec my-pod -- cat /var/log/nginx/access.log
+```
+
+------
+
+### ✅ 检查容器网络连接
+
+```bash
+kubectl exec -it my-pod -- curl -I http://localhost:8080
+```
+
+------
+
+### ✅ 检查容器文件系统
+
+```bash
+kubectl exec my-pod -- df -h
+kubectl exec my-pod -- du -sh /var/log
+```
+
+------
+
+## 六、常见错误与解决方法
+
+| 错误信息                                       | 可能原因                     | 解决方案                               |
+| ---------------------------------------------- | ---------------------------- | -------------------------------------- |
+| `error: unable to upgrade connection`          | 网络问题或 Pod 未运行        | 检查 Pod 状态是否为 `Running`          |
+| `error: container not found`                   | Pod 有多个容器，未指定容器名 | 使用 `-c` 指定容器名称                 |
+| `rpc error: code = 2 desc = oci runtime error` | 容器崩溃或镜像无 Shell       | 确认容器是否可进入；镜像可用 `/bin/sh` |
+| `no TTY present`                               | 忘记加 `-t` 参数             | 使用 `-it` 分配交互式终端              |
+| `exec failed: container not found`             | Pod 重建导致名称变化         | 重新获取 Pod 名称再执行                |
+
+------
+
+## 七、调试技巧 💡
+
+| 场景           | 命令                                       |
+| -------------- | ------------------------------------------ |
+| 查看容器网络   | `kubectl exec -it pod -- netstat -tunlp`   |
+| 查看进程       | `kubectl exec -it pod -- ps aux`           |
+| 查看环境变量   | `kubectl exec pod -- env`                  |
+| 测试网络连通性 | `kubectl exec pod -- ping -c 3 10.244.0.1` |
+| 查看文件内容   | `kubectl exec pod -- cat /etc/resolv.conf` |
+
+------
+
+## 八、与其他命令的对比
+
+| 命令                   | 功能              | 特点                 |
+| ---------------------- | ----------------- | -------------------- |
+| `kubectl exec`         | 在容器中执行命令  | 实时执行，适合调试   |
+| `kubectl logs`         | 查看容器日志      | 只读输出，不进入容器 |
+| `kubectl cp`           | 复制文件至/从容器 | 文件传输操作         |
+| `kubectl port-forward` | 转发本地端口      | 调试网络连接         |
+
+------
+
+## 九、常用快捷命令汇总
+
+| 功能         | 命令                                                       |
+| ------------ | ---------------------------------------------------------- |
+| 进入容器     | `kubectl exec -it pod -- sh`                               |
+| 查看目录     | `kubectl exec pod -- ls /app`                              |
+| 查看环境变量 | `kubectl exec pod -- env`                                  |
+| 查看日志文件 | `kubectl exec pod -- cat /var/log/app.log`                 |
+| 测试网络连接 | `kubectl exec pod -- curl http://localhost:8080`           |
+| 多条命令     | `kubectl exec pod -- sh -c "cd /app && ls && cat log.txt"` |
+| 指定容器     | `kubectl exec -it pod -c container-name -- bash`           |
+
+------
+
+## 十、最佳实践 ✅
+
+1. **使用 `-it` 进入交互式终端**（例如 `/bin/sh`）。
+
+2. **避免在生产环境容器中频繁修改文件**，推荐用 ConfigMap/Secret 管理配置。
+
+3. **排查 Pod 状态时，先执行**：
+
+   ```bash
+   kubectl get pod <pod-name> -o wide
+   ```
+
+   确认 Pod 处于 `Running` 状态。
+
+4. **调试短命容器**时，可以使用：
+
+   ```bash
+   kubectl run debug --image=busybox -it --rm --restart=Never -- sh
+   ```
+
+5. **与 `kubectl cp` 搭配**使用，用于上传脚本进行测试。
+
+------
+
+## 十一、命令速查表
+
+| 场景                          | 命令示例                                           |
+| ----------------------------- | -------------------------------------------------- |
+| 进入容器 Shell                | `kubectl exec -it my-pod -- /bin/sh`               |
+| 查看文件内容                  | `kubectl exec my-pod -- cat /etc/hosts`            |
+| 执行多条命令                  | `kubectl exec my-pod -- sh -c "ls / && echo done"` |
+| 查看环境变量                  | `kubectl exec my-pod -- env`                       |
+| 指定容器执行命令              | `kubectl exec -it my-pod -c sidecar -- /bin/bash`  |
+| 执行脚本文件                  | `kubectl exec my-pod -- sh /tmp/test.sh`           |
+| 在所有 nginx Pod 中查看主机名 | `kubectl get pods -l app=nginx -o name             |
+
+------
+
+## 十二、总结
+
+- `kubectl exec` 是 Kubernetes 调试中最常用的命令之一；
+- 通过它可以直接在容器内执行命令，快速定位问题；
+- 常与 `kubectl logs`、`kubectl cp`、`kubectl port-forward` 等命令结合使用；
+- 在生产环境使用时，应注意安全与权限控制（RBAC）。
+
+> 📖 一句话总结：
+>  **`kubectl exec` 是你进入 Kubernetes 容器世界的“后门”。**
+
+------
+

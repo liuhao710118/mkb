@@ -1,4 +1,4 @@
-# 🧭 kubectl create 命令使用教程
+# 🧭 kubectl create 
 
 ## 一、命令概述
 
@@ -238,11 +238,11 @@ kubectl create service nodeport web-svc --tcp=80:80 --namespace=webapp
 | 模拟执行        | `kubectl create deployment nginx --image=nginx --dry-run=client -o yaml` |
 
 当然可以 ✅
- 以下是一份格式规范、适合教学或培训使用的 **《kubectl explain 命令使用教程》** 文档。内容涵盖命令功能、语法结构、常见用法、进阶技巧与实际示例，可直接作为内部培训资料或学习笔记使用。
+ 以下是一份格式规范、适合教学或培训使用的 **《kubectl explain 》** 文档。内容涵盖命令功能、语法结构、常见用法、进阶技巧与实际示例，可直接作为内部培训资料或学习笔记使用。
 
 ------
 
-# 🧭 kubectl delete 命令使用教程
+# 🧭 kubectl delete 
 
 ## 一、命令概述
 
@@ -548,7 +548,7 @@ kubectl delete namespace test
 
 
 
-# 🧭 kubectl explain 命令使用教程
+# 🧭 kubectl explain 
 
 > 通常想要知道集群上有哪些资源可以通过kubectl api-resources命令获取到
 
@@ -804,7 +804,7 @@ spec:
 
 ------
 
-# 🧭 kubectl expose 命令使用教程
+# 🧭 kubectl expose 
 
 ## 一、命令概述
 
@@ -1057,7 +1057,7 @@ http://<NodeIP>:30574
 
 
 
-# 📘 kubectl logs 命令使用教程
+# 🧭 kubectl logs 
 
 ## 一、命令概述
 
@@ -1352,7 +1352,7 @@ kubectl logs -l app=nginx -n production
 
 
 
-# 📘 kubectl set 命令使用教程
+# 🧭 kubectl set 
 
 ## 一、命令概述
 
@@ -1672,7 +1672,7 @@ kubectl describe pod <pod-name>
 
 
 
-# 📘kubectl exec 命令使用教程
+# 🧭 kubectl exec 
 
 ------
 
@@ -1946,6 +1946,660 @@ kubectl exec my-pod -- du -sh /var/log
 
 > 📖 一句话总结：
 >  **`kubectl exec` 是你进入 Kubernetes 容器世界的“后门”。**
+
+------
+
+# 🧭 kubectl describe 
+
+------
+
+## 一、命令概述
+
+`kubectl describe` 是 Kubernetes 中用于**查看资源详细信息**的命令。
+ 与 `kubectl get` 不同，`describe` 会输出**更详细的人类可读信息**，
+ 包括状态、事件、容器、卷、策略、调度信息等。
+
+> 📖 一句话总结：
+>  `kubectl get` 是“概览”，
+>  `kubectl describe` 是“深度解剖”。
+
+------
+
+## 二、命令语法
+
+```bash
+kubectl describe (TYPE [NAME | -l label] | TYPE/NAME) [options]
+```
+
+------
+
+## 三、参数说明
+
+| 参数               | 说明                                           |
+| ------------------ | ---------------------------------------------- |
+| `TYPE`             | 资源类型，如 pod、node、service、deployment 等 |
+| `NAME`             | 资源名称                                       |
+| `-n, --namespace`  | 指定命名空间                                   |
+| `-l, --selector`   | 使用标签选择器过滤资源                         |
+| `--show-events`    | 是否显示事件（默认为 true）                    |
+| `--all-namespaces` | 显示所有命名空间的资源                         |
+| `--chunk-size`     | 分块请求资源数量，防止过大结果超时             |
+
+------
+
+## 四、常见用法示例
+
+------
+
+### 🧩 1️⃣ 查看 Pod 详情
+
+```bash
+kubectl describe pod nginx-7c8f9b9f5b-xyz12
+```
+
+**输出示例（部分）：**
+
+```
+Name:         nginx-7c8f9b9f5b-xyz12
+Namespace:    default
+Node:         node1/192.168.1.10
+Start Time:   Thu, 13 Nov 2025 09:00:00 +0800
+Labels:       app=nginx
+Status:       Running
+Containers:
+  nginx:
+    Image:          nginx:1.25
+    Port:           80/TCP
+    State:          Running
+    Ready:          True
+    Restart Count:  0
+Events:
+  Type     Reason     Age   From               Message
+  ----     ------     ----  ----               -------
+  Normal   Scheduled  1m    default-scheduler  Successfully assigned nginx-7c8f9b9f5b-xyz12 to node1
+  Normal   Pulled     1m    kubelet            Container image "nginx:1.25" already present on machine
+```
+
+📌 **重点内容：**
+
+- **状态（Status）**：Running / Pending / CrashLoopBackOff
+- **容器（Containers）**：镜像、端口、重启次数
+- **事件（Events）**：调度、拉取镜像、启动、错误信息
+
+------
+
+### 🧩 2️⃣ 查看 Deployment 详情
+
+```bash
+kubectl describe deployment nginx-deploy
+```
+
+**可查看内容：**
+
+- 副本数（Desired / Current / Updated）
+- 滚动更新策略
+- 镜像版本
+- Pod 模板
+- 最近事件（如滚动更新）
+
+------
+
+### 🧩 3️⃣ 查看 Node（节点）详情
+
+```bash
+kubectl describe node node1
+```
+
+**可查看内容：**
+
+- 节点信息（IP、OS、Kubelet 版本）
+- 资源分配（CPU、内存）
+- Pod 分布情况
+- 节点条件（Ready / NotReady）
+- Taints（污点）
+- 分配的 Pod 资源汇总
+
+------
+
+### 🧩 4️⃣ 查看 Service 详情
+
+```bash
+kubectl describe svc my-service
+```
+
+**可查看内容：**
+
+- 类型（ClusterIP / NodePort / LoadBalancer）
+- Cluster IP / External IP
+- Selector
+- 端口映射
+- 关联的 Endpoints
+
+------
+
+### 🧩 5️⃣ 查看 Namespace 下所有 Pod 的详细信息
+
+```bash
+kubectl describe pods -n default
+```
+
+或使用标签过滤：
+
+```bash
+kubectl describe pods -l app=nginx
+```
+
+------
+
+### 🧩 6️⃣ 查看 ReplicaSet、DaemonSet、StatefulSet 信息
+
+```bash
+kubectl describe rs my-rs
+kubectl describe ds kube-proxy
+kubectl describe sts mysql
+```
+
+------
+
+### 🧩 7️⃣ 查看 Secret / ConfigMap 信息
+
+```bash
+kubectl describe configmap app-config
+kubectl describe secret db-secret
+```
+
+> 注意：`describe secret` 不会直接显示 Secret 的明文内容。
+
+------
+
+### 🧩 8️⃣ 查看 Event 事件资源
+
+```bash
+kubectl describe event <event-name>
+```
+
+或列出所有事件：
+
+```bash
+kubectl get events --sort-by=.metadata.creationTimestamp
+```
+
+------
+
+## 五、配合选项使用
+
+| 命令示例                                    | 功能                   |
+| ------------------------------------------- | ---------------------- |
+| `kubectl describe pod nginx -n kube-system` | 指定命名空间           |
+| `kubectl describe pod -l app=nginx`         | 按标签选择器过滤       |
+| `kubectl describe pods --show-events=false` | 不显示事件             |
+| `kubectl describe node --all-namespaces`    | 查看所有命名空间的节点 |
+
+------
+
+## 六、常见资源类型
+
+| 类型                     | 说明         |
+| ------------------------ | ------------ |
+| `pods`                   | Pod 详情     |
+| `nodes`                  | 节点详情     |
+| `deployments`            | 部署详情     |
+| `services`               | 服务详情     |
+| `replicasets`            | 副本集详情   |
+| `daemonsets`             | 守护进程集   |
+| `statefulsets`           | 有状态副本集 |
+| `configmaps`             | 配置详情     |
+| `secrets`                | 密钥详情     |
+| `events`                 | 事件详情     |
+| `namespaces`             | 命名空间详情 |
+| `persistentvolumeclaims` | PVC 详情     |
+| `persistentvolumes`      | PV 详情      |
+
+------
+
+## 七、典型使用场景
+
+| 场景                | 命令                                 | 说明                                |
+| ------------------- | ------------------------------------ | ----------------------------------- |
+| Pod 一直 Pending    | `kubectl describe pod <pod>`         | 查看事件，排查调度或资源问题        |
+| Deployment 无法更新 | `kubectl describe deployment <name>` | 检查滚动更新策略、镜像拉取错误      |
+| Node 不可用         | `kubectl describe node <name>`       | 查看节点条件（Ready、DiskPressure） |
+| Service 无法访问    | `kubectl describe svc <name>`        | 检查端口、Selector 与 Endpoint      |
+| PVC 绑定失败        | `kubectl describe pvc <name>`        | 查看绑定状态与事件                  |
+| 查看 ConfigMap 内容 | `kubectl describe configmap <name>`  | 了解配置键值信息                    |
+
+------
+
+## 八、事件（Events）分析
+
+在 `kubectl describe` 的输出中，**Events 区块**非常关键，
+ 可帮助你定位 Pod 启动失败或调度异常原因。
+
+常见事件类型包括：
+
+| 类型                 | 说明                                   |
+| -------------------- | -------------------------------------- |
+| **Normal**           | 正常事件（如已调度、镜像已拉取）       |
+| **Warning**          | 异常事件（如拉取镜像失败、挂载卷失败） |
+| **FailedScheduling** | 调度失败，可能是资源不足或节点污点     |
+| **BackOff**          | 容器反复重启                           |
+| **CrashLoopBackOff** | 容器启动后立即崩溃                     |
+| **ImagePullBackOff** | 镜像拉取失败                           |
+
+------
+
+## 九、常见问题与解决思路
+
+| 问题                 | 原因                     | 排查命令                       |
+| -------------------- | ------------------------ | ------------------------------ |
+| Pod Pending          | 节点资源不足、无匹配节点 | `kubectl describe pod <name>`  |
+| Pod CrashLoopBackOff | 应用启动失败             | 查看 `Events` 与容器日志       |
+| Service 无后端       | Selector 标签不匹配      | `kubectl describe svc <name>`  |
+| PVC Pending          | 无可绑定 PV              | `kubectl describe pvc <name>`  |
+| 节点 NotReady        | 节点网络或 kubelet 故障  | `kubectl describe node <name>` |
+
+------
+
+## 十、`describe` 与 `get` 的区别
+
+| 对比项   | `kubectl get`  | `kubectl describe`     |
+| -------- | -------------- | ---------------------- |
+| 输出形式 | 简洁表格       | 详细文本               |
+| 信息量   | 少             | 丰富（包括事件）       |
+| 适用场景 | 快速查看状态   | 深入排查问题           |
+| 支持选项 | `-o yaml/json` | 无格式化输出（仅文本） |
+
+------
+
+## 十一、常用命令速查表
+
+| 场景                 | 命令                                    |
+| -------------------- | --------------------------------------- |
+| 查看 Pod 详情        | `kubectl describe pod my-pod`           |
+| 查看 Deployment 详情 | `kubectl describe deployment my-deploy` |
+| 查看 Service 详情    | `kubectl describe svc my-service`       |
+| 查看 Node 详情       | `kubectl describe node node1`           |
+| 查看 ConfigMap       | `kubectl describe configmap my-config`  |
+| 查看 PVC 详情        | `kubectl describe pvc data-pvc`         |
+| 查看某标签 Pod       | `kubectl describe pods -l app=nginx`    |
+| 查看所有事件         | `kubectl get events -A`                 |
+
+------
+
+## 十二、最佳实践 ✅
+
+1. **优先查看 Events**：这是诊断问题的关键。
+
+2. **结合 `kubectl logs`** 使用，可快速定位 Pod 启动错误。
+
+3. **结合 `kubectl get`** 查看概览，再用 `describe` 深入分析。
+
+4. **调试 Pod 启动失败时**，先：
+
+   ```bash
+   kubectl describe pod <pod-name>
+   ```
+
+   然后再：
+
+   ```bash
+   kubectl logs <pod-name>
+   ```
+
+5. **可搭配 grep 提取关键信息**：
+
+   ```bash
+   kubectl describe pod my-pod | grep -A5 Events
+   ```
+
+------
+
+## 十三、总结
+
+- `kubectl describe` 提供 Kubernetes 资源的**详细运行状态**；
+- 可查看容器配置、事件、调度信息，是排障第一工具；
+- 建议与 `kubectl logs`、`kubectl get`、`kubectl exec` 联合使用；
+- 重点关注输出末尾的 **Events 区块**。
+
+> 📖 一句话总结：
+>  **`kubectl get` 看整体，`kubectl describe` 找问题。**
+
+------
+
+
+
+# 🧭 kubectl events
+
+------
+
+## 一、命令概述
+
+`kubectl events` 是 Kubernetes 中用于**查看集群中事件（Event）\**的命令。
+ 它显示了 Kubernetes 系统中对象（如 Pod、Node、Deployment、PVC 等）在运行过程中发生的各种\**状态变化、错误、调度、重启**等事件。
+
+> 📖 一句话总结：
+>  **`kubectl events` 是排查 Kubernetes 问题的“日志窗口”。**
+
+它是对旧命令
+
+```bash
+kubectl get events
+```
+
+的增强替代，输出更清晰、格式更现代化，支持实时监控和高级过滤。
+
+------
+
+## 二、命令语法
+
+```bash
+kubectl events [flags]
+```
+
+或查看某个命名空间下的事件：
+
+```bash
+kubectl events -n <namespace>
+```
+
+------
+
+## 三、参数说明
+
+| 参数                   | 说明                                               |
+| ---------------------- | -------------------------------------------------- |
+| `-A, --all-namespaces` | 显示所有命名空间的事件                             |
+| `-n, --namespace`      | 指定命名空间                                       |
+| `--for <resource>`     | 仅显示与某资源相关的事件（例如 Pod 或 Deployment） |
+| `--field-selector`     | 通过字段过滤（如 `involvedObject.kind=Pod`）       |
+| `--watch`              | 实时持续输出事件                                   |
+| `--sort-by`            | 按字段排序（如时间戳）                             |
+| `--limit`              | 限制输出事件的数量                                 |
+| `-o, --output`         | 输出格式：`wide`, `json`, `yaml`, `name` 等        |
+
+------
+
+## 四、事件类型与结构
+
+每条事件记录包含以下关键信息：
+
+| 字段                     | 含义                                                   |
+| ------------------------ | ------------------------------------------------------ |
+| **Type**                 | 事件类型：Normal / Warning                             |
+| **Reason**               | 事件原因（如 `Pulled`、`Created`、`FailedScheduling`） |
+| **Object**               | 触发事件的对象（如 Pod、Node）                         |
+| **Source**               | 事件来源（kubelet、scheduler 等）                      |
+| **Message**              | 详细描述                                               |
+| **FirstSeen / LastSeen** | 首次与最近发生时间                                     |
+| **Count**                | 事件重复发生次数                                       |
+
+------
+
+## 五、常见用法
+
+------
+
+### 🧩 1️⃣ 查看当前命名空间下的事件
+
+```bash
+kubectl events
+```
+
+等价于旧写法：
+
+```bash
+kubectl get events
+```
+
+输出示例：
+
+```
+LAST SEEN   TYPE      REASON              OBJECT                    MESSAGE
+1m          Normal    Scheduled           pod/nginx-7c8f9b9f5b-xyz  Successfully assigned default/nginx to node1
+1m          Normal    Pulled              pod/nginx-7c8f9b9f5b-xyz  Container image "nginx:1.25" already present on machine
+1m          Normal    Created             pod/nginx-7c8f9b9f5b-xyz  Created container nginx
+1m          Normal    Started             pod/nginx-7c8f9b9f5b-xyz  Started container nginx
+```
+
+------
+
+### 🧩 2️⃣ 查看所有命名空间的事件
+
+```bash
+kubectl events -A
+```
+
+------
+
+### 🧩 3️⃣ 查看特定资源的事件
+
+查看某个 Pod 的事件：
+
+```bash
+kubectl events --for pod/nginx-7c8f9b9f5b-xyz
+```
+
+查看 Deployment 的事件：
+
+```bash
+kubectl events --for deployment/nginx-deploy
+```
+
+查看 Node 的事件：
+
+```bash
+kubectl events --for node/node1
+```
+
+------
+
+### 🧩 4️⃣ 实时查看事件（类似 tail）
+
+```bash
+kubectl events --watch
+```
+
+或带命名空间：
+
+```bash
+kubectl events -n kube-system --watch
+```
+
+> 💡 类似日志“实时刷新”，非常适合部署或调试过程中使用。
+
+------
+
+### 🧩 5️⃣ 查看警告类事件
+
+只查看 Warning 级别事件：
+
+```bash
+kubectl events --field-selector type=Warning
+```
+
+------
+
+### 🧩 6️⃣ 查看特定对象类型事件
+
+仅查看 Pod 相关事件：
+
+```bash
+kubectl events --field-selector involvedObject.kind=Pod
+```
+
+仅查看某个节点事件：
+
+```bash
+kubectl events --field-selector involvedObject.kind=Node
+```
+
+------
+
+### 🧩 7️⃣ 按时间排序
+
+```bash
+kubectl events --sort-by=.metadata.creationTimestamp
+```
+
+------
+
+### 🧩 8️⃣ 输出为 YAML 或 JSON 格式
+
+```bash
+kubectl events -o yaml
+kubectl events -o json
+```
+
+可配合 `jq` 等工具进行分析：
+
+```bash
+kubectl events -o json | jq '.items[] | {type, reason, message}'
+```
+
+------
+
+## 六、事件类型（Type）
+
+| 类型        | 说明     | 示例                                                         |
+| ----------- | -------- | ------------------------------------------------------------ |
+| **Normal**  | 正常事件 | `Scheduled`, `Created`, `Started`                            |
+| **Warning** | 警告事件 | `FailedScheduling`, `BackOff`, `CrashLoopBackOff`, `FailedMount` |
+
+------
+
+## 七、常见事件与含义
+
+| 事件类型 | REASON                | 说明                             |
+| -------- | --------------------- | -------------------------------- |
+| Normal   | **Scheduled**         | Pod 被成功调度到某节点           |
+| Normal   | **Pulled**            | 容器镜像已拉取                   |
+| Normal   | **Started**           | 容器已启动                       |
+| Warning  | **FailedScheduling**  | 调度失败（资源不足、节点污点）   |
+| Warning  | **BackOff**           | 容器反复重启（CrashLoopBackOff） |
+| Warning  | **FailedMount**       | 挂载卷失败（PVC 未绑定）         |
+| Warning  | **ImagePullBackOff**  | 镜像拉取失败                     |
+| Warning  | **Unhealthy**         | 健康检查失败                     |
+| Warning  | **FailedCreate**      | 无法创建 Pod 或 ReplicaSet       |
+| Normal   | **Killing**           | 容器被终止                       |
+| Normal   | **ScalingReplicaSet** | Deployment 调整副本数            |
+
+------
+
+## 八、实际场景分析
+
+| 场景                 | 命令                               | 说明                                 |
+| -------------------- | ---------------------------------- | ------------------------------------ |
+| Pod 一直 Pending     | `kubectl events --for pod/<name>`  | 检查是否因节点资源不足或污点调度失败 |
+| Pod CrashLoopBackOff | `kubectl events --for pod/<name>`  | 检查是否镜像错误或启动命令错误       |
+| PVC Pending          | `kubectl events --for pvc/<name>`  | 检查是否缺少 PV                      |
+| Service 无响应       | `kubectl events --for svc/<name>`  | 检查端口或 Endpoints 状态            |
+| 节点异常             | `kubectl events --for node/<name>` | 查看节点健康与 taint 状态            |
+
+------
+
+## 九、结合其他命令使用
+
+| 组合命令                                                   | 功能                    |
+| ---------------------------------------------------------- | ----------------------- |
+| `kubectl describe pod <name>`                              | 查看事件详情与状态      |
+| `kubectl logs <pod>`                                       | 分析容器内部日志        |
+| `kubectl get events --sort-by=.metadata.creationTimestamp` | 旧格式事件列表          |
+| `kubectl get pods --watch` + `kubectl events --watch`      | 实时监控 Pod 状态与事件 |
+
+------
+
+## 十、常见问题与解决方案
+
+| 问题           | 原因                                 | 解决方法                                      |
+| -------------- | ------------------------------------ | --------------------------------------------- |
+| 没有事件输出   | 命名空间不对或事件已过期             | 使用 `-A` 或 `--for` 指定对象                 |
+| Event 记录过多 | 历史事件未清理                       | 可重启 `kube-controller-manager` 或事件存储器 |
+| Event 消失太快 | Kubernetes 默认事件保留 1 小时       | 修改 `--event-ttl` 参数延长时间               |
+| 排查不到异常   | 某些错误不触发事件（如容器内部错误） | 配合 `kubectl logs` 使用                      |
+
+------
+
+## 十一、进阶：事件过滤技巧
+
+| 过滤目标                     | 命令示例                                                     |
+| ---------------------------- | ------------------------------------------------------------ |
+| 查看 Pod 警告                | `kubectl events --field-selector type=Warning,involvedObject.kind=Pod` |
+| 查看 Node 事件               | `kubectl events --field-selector involvedObject.kind=Node`   |
+| 查看某 Deployment 的所有事件 | `kubectl events --for deployment/my-deploy`                  |
+| 实时监控所有事件             | `kubectl events -A --watch`                                  |
+
+------
+
+## 十二、与 `kubectl get events` 的区别
+
+| 对比项          | `kubectl get events`   | `kubectl events`                   |
+| --------------- | ---------------------- | ---------------------------------- |
+| 是否新版推荐    | ❌ 旧命令（将逐步弃用） | ✅ 新推荐命令                       |
+| 输出格式        | 表格（不对齐）         | 清晰分栏                           |
+| 实时监控        | 不支持                 | ✅ 支持 `--watch`                   |
+| 过滤能力        | 较弱                   | ✅ 支持 `--for`、`--field-selector` |
+| 输出格式        | 支持 `yaml/json`       | ✅ 更完整                           |
+| Kubernetes 版本 | 1.27+ 推荐使用         | 官方新标准                         |
+
+------
+
+## 十三、命令速查表
+
+| 任务                   | 命令                                                   |
+| ---------------------- | ------------------------------------------------------ |
+| 查看当前命名空间事件   | `kubectl events`                                       |
+| 查看所有命名空间事件   | `kubectl events -A`                                    |
+| 查看某 Pod 事件        | `kubectl events --for pod/<name>`                      |
+| 查看某 Deployment 事件 | `kubectl events --for deployment/<name>`               |
+| 实时监控事件           | `kubectl events --watch`                               |
+| 仅显示警告事件         | `kubectl events --field-selector type=Warning`         |
+| 按时间排序             | `kubectl events --sort-by=.metadata.creationTimestamp` |
+| 输出 YAML 格式         | `kubectl events -o yaml`                               |
+
+------
+
+## 十四、最佳实践 ✅
+
+1. **排查任何 Pod 问题的第一步**：
+
+   ```bash
+   kubectl events --for pod/<name>
+   ```
+
+2. **实时监控部署发布**：
+
+   ```bash
+   kubectl rollout restart deployment/web && kubectl events --watch
+   ```
+
+3. **配合日志分析**：
+    先看事件，再看日志：
+
+   ```bash
+   kubectl events --for pod/<name>
+   kubectl logs <name>
+   ```
+
+4. **关注 Warning 事件**：
+    它们通常揭示了调度失败、镜像错误、卷挂载问题。
+
+5. **定期导出事件记录用于审计**：
+
+   ```bash
+   kubectl events -A -o yaml > cluster-events.yaml
+   ```
+
+------
+
+## 十五、总结
+
+- `kubectl events` 是诊断 Kubernetes 问题的首选工具之一；
+- 可以实时查看集群中所有对象的事件流；
+- 对调度失败、镜像拉取失败、容器崩溃、卷挂载等问题尤为有用；
+- 支持按类型、命名空间、资源进行精准过滤。
+
+> 📖 一句话总结：
+>  **`kubectl events` = Kubernetes 的“系统事件日志监控器”。**
 
 ------
 

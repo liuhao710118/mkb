@@ -1,6 +1,8 @@
 ## 运维
 
-[Linux运维汇总](./Linux/README.md)
+1.[Linux运维(命令，概念等)](./Linux/README.md)
+
+2.[发布工具Jenkins](./CICD/Jenkins/README.md)
 
 
 

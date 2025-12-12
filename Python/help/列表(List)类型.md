@@ -123,6 +123,25 @@ print(list1 == list3)  # False
 print(list1 < list3)   # True (按元素比较)
 ```
 
+
+
+
+
+### 列表扩展
+
+```
+list1 = [1, 2, 3]
+list2 = [1, 2, 3]
+list3 = [1, 2, 4]
+
+arr= list1 + list2+list3
+arr.extends(list1)
+arr.extends(list2)
+arr.extends(list3)
+```
+
+
+
 ## 列表方法
 
 ### 添加元素
@@ -139,6 +158,8 @@ fruits.insert(1, 'blueberry')  # ['apple', 'blueberry', 'banana', 'cherry']
 # extend() - 添加多个元素
 fruits.extend(['date', 'elderberry'])  # ['apple', 'blueberry', 'banana', 'cherry', 'date', 'elderberry']
 ```
+
+
 
 ### 删除元素
 

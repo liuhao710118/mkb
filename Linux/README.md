@@ -187,3 +187,25 @@
 [w命令](./w命令.md)：**查看当前系统有哪些用户登录、系统负载情况、每个用户正在执行的命令等详细信息**。
 
 [last命令](./last命令.md)：用于 **查看系统的历史登录记录**。查看谁登录过服务器 查看非法登录尝试 查看历史重启记录 审计运维操作
+
+
+
+## 权限管理
+
+[chmod命令](./chmod命令.md)：`chmod`（**change mode**）用于**修改文件或目录的访问权限**。
+
+[chown命令](./chown命令.md)：`chown` 是 Linux/Unix 系统中**修改文件或目录的属主（owner）和属组（group）**的命令，常用于权限管理。
+
+[chgrp命令](./chgrp命令.md)：`chgrp` 是 Linux/Unix 中用于**修改文件或目录所属组（group）**的命令，功能相当于 `chown :组 文件`，但更专注、更直观。
+
+## 防火墙
+
+[firewalld命令](./firewalld命令.md)：**firewalld** 是 Rocky Linux 默认的防火墙管理工具，基于 **zone（区域）** 和 **service（服务）** 的动态防火墙系统。
+
+
+
+## 软件管理
+
+[yum命令](./yum命令.md)
+
+[dnf命令](./dnf命令.md)

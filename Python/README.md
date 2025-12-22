@@ -34,7 +34,7 @@
 
 2.[json模块](./help/json模块.md)
 
-3.[时间模块](./help/python处理时间教程.md)
+3.[时间模块](./help/python处理时间教程.md) [datetime模块](./help/datetime模块简介.md) [datetime常用速查表](./help/datetime常用速查表.md)
 
 
 

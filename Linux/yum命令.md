@@ -217,8 +217,11 @@ gpgcheck=0
 ### 1️⃣ 下载 RPM + 依赖
 
 ```bash
-yum install --downloadonly \
---downloaddir=/tmp/nginx nginx
+# 需要注意的是当软件包已经在系统安装过了 这个就无法下载下来 
+yum install --downloadonly  --downloaddir=. nginx
+
+# 推荐使用reinstall重新触发下载 假装重新安装软件包，触发下载过程。
+yum reinstall --downloadonly  --downloaddir=. nginx
 ```
 
 ### 2️⃣ 离线安装

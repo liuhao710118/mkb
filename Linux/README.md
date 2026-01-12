@@ -1,3 +1,5 @@
+# 常用命令集
+
 ## 脚本bash
 
 参考链接：[shell教程](./Shell教程.md)
@@ -160,11 +162,27 @@
 
 [iotop命令](./iotop命令.md)：用于实时监控系统中 **进程/线程的磁盘 I/O 使用情况** 
 
+[lsblk命令](./lsblk命令.md)：`lsblk` 是 Linux 中**查看块设备（磁盘、分区、挂载点）结构**的常用命令之一，直观、非常适合运维和排障场景。
+
+[parted命令](./parted命令.md)：创建 / 删除 / 查看 **磁盘分区**
+
+[fdisk命令](./fdisk命令.md)：`fdisk` 是 Linux 中**最经典、最常用的磁盘分区工具**，适合 **MBR 分区表、小于 2TB 的磁盘**
+
+[mount命令](./mount命令.md)： 是 Linux 中**文件系统挂载的核心命令**，用于把一个分区 / 设备 / 网络存储 **挂到某个目录上使用**
+
+[umount命令](./umount命令.md)：卸载（取消挂载）文件系统 断开 **目录 ↔ 设备** 的映射
 
 
-1.[Linux上的inode是什么](./concept/inode是什么.md)
 
-2.[Linux中的block块是什么](./concept/Linux中的block块是什么.md)
+1.[Linux常见文件系统类型总览](./concept/Linux常见文件系统类型总览.md)
+
+2.[Linux上的inode是什么](./concept/inode是什么.md)
+
+3.[Linux中的block块是什么](./concept/Linux中的block块是什么.md)
+
+4.[什么是格式化分区](./concept/什么是格式化分区.md)
+
+5.[RocktyLinux磁盘分区挂载教程案例](./RocktyLinux磁盘分区挂载教程案例.md)
 
 
 
@@ -209,3 +227,9 @@
 [yum命令](./yum命令.md)
 
 [dnf命令](./dnf命令.md)
+
+
+
+# 在平常的运维中遇到的问题
+
+1.[如何根据进程号PID定位具体程序运行的目录](./question/如何根据进程号PID定位具体程序运行的目录.md)

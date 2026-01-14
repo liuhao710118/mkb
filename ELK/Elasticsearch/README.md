@@ -24,3 +24,7 @@
 ## 数据建模与管理
 
 [映射（Mapping）](./映射Mapping.md):Elasticsearch 的 Mapping 类似于数据库中的表结构定义，它决定了数据如何被存储和索引
+
+[(Document)文档是什么](./(Document)文档是什么.md)：**Document 是最小的数据单元，相当于数据库中的“一行记录”**
+
+[索引(index)](./Elasticsearch的索引.md)：**Index 是 Elasticsearch 中用于存储一类 Document 的逻辑容器**

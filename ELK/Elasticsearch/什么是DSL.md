@@ -2765,3 +2765,1558 @@ resp = es.search(
 
 # 数据聚合
 
+## 字段（term）分组/分桶
+
+### 一、terms 聚合是什么？
+
+**terms 聚合**用于
+👉 **按字段的“唯一值”进行分组统计**（类似 SQL 的 `GROUP BY`）
+
+典型用途：
+
+* 按 **服务名** 统计日志条数
+* 按 **主机 IP** 统计请求量
+* 按 **状态码** 统计分布
+* Top N 统计（最常见）
+
+---
+
+### 二、最基础的 terms 聚合
+
+#### 示例：按 `status` 分组统计文档数
+
+```json
+GET logs/_search
+{
+  "size": 0,
+  "aggs": {
+    "status_count": {
+      "terms": {
+        "field": "status"
+      }
+    }
+  }
+}
+```
+
+#### 返回结果（示意）
+
+```json
+"aggregations": {
+  "status_count": {
+    "buckets": [
+      { "key": 200, "doc_count": 12345 },
+      { "key": 404, "doc_count": 321 },
+      { "key": 500, "doc_count": 87 }
+    ]
+  }
+}
+```
+
+📌 **解释**
+
+* `key`：字段的值
+* `doc_count`：该值对应的文档数
+
+---
+
+### 三、terms 常用参数（非常重要）
+
+#### 1️⃣ size（Top N）
+
+```json
+"terms": {
+  "field": "service_name.keyword",
+  "size": 5
+}
+```
+
+👉 只返回 **出现次数最多的前 5 个值**
+
+⚠️ 默认 `size = 10`
+
+---
+
+#### 2️⃣ field：一定要注意 keyword
+
+❌ 错误用法：
+
+```json
+"field": "service_name"
+```
+
+✅ 正确用法（字符串字段）：
+
+```json
+"field": "service_name.keyword"
+```
+
+📌 原因：
+
+* `text` 类型 **不能直接用于 terms**
+* 需要 `keyword`（未分词）
+
+---
+
+#### 3️⃣ order：排序方式
+
+#### 按 doc_count 降序（默认）
+
+```json
+"order": { "_count": "desc" }
+```
+
+#### 按 doc_count 升序
+
+```json
+"order": { "_count": "asc" }
+```
+
+#### 按 key 排序
+
+```json
+"order": { "_key": "asc" }
+```
+
+---
+
+#### 4️⃣ missing：缺失值处理
+
+```json
+"terms": {
+  "field": "host.keyword",
+  "missing": "UNKNOWN"
+}
+```
+
+👉 没有该字段的文档会被归为 `UNKNOWN`
+
+---
+
+#### 5️⃣ min_doc_count：过滤低频值
+
+```json
+"terms": {
+  "field": "status",
+  "min_doc_count": 10
+}
+```
+
+👉 只统计 **出现 ≥10 次** 的值
+
+---
+
+### 四、terms + 子聚合（非常常用）
+
+#### 示例：按服务分组，再统计平均响应时间
+
+```json
+GET apm/_search
+{
+  "size": 0,
+  "aggs": {
+    "by_service": {
+      "terms": {
+        "field": "service_name.keyword",
+        "size": 10
+      },
+      "aggs": {
+        "avg_rt": {
+          "avg": {
+            "field": "response_time"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+📌 典型 **运维/APM 场景**
+
+---
+
+### 五、terms + 查询条件（先过滤再聚合）
+
+```json
+GET logs/_search
+{
+  "size": 0,
+  "query": {
+    "range": {
+      "@timestamp": {
+        "gte": "now-1h"
+      }
+    }
+  },
+  "aggs": {
+    "by_level": {
+      "terms": {
+        "field": "level.keyword"
+      }
+    }
+  }
+}
+```
+
+👉 **最近 1 小时** 不同日志级别分布
+
+---
+
+### 六、高基数字段 & 性能问题（重点）
+
+#### ⚠️ terms 不适合字段
+
+* traceId
+* userId
+* requestId
+* UUID
+
+原因：
+
+* 唯一值太多（高基数）
+* 内存消耗大
+* 结果不准确
+
+#### 替代方案
+
+| 场景      | 建议                 |
+| --------- | -------------------- |
+| 去重数量  | `cardinality`        |
+| 分页聚合  | `composite`          |
+| 精确 TopN | `terms + shard_size` |
+
+---
+
+### 七、terms 精度问题（shard_size）
+
+```json
+"terms": {
+  "field": "service.keyword",
+  "size": 10,
+  "shard_size": 100
+}
+```
+
+📌 **原理**
+
+* 每个 shard 先取 `shard_size`
+* 再在 coordinator 合并
+
+👉 shard 多、数据倾斜时必须调大
+
+---
+
+### 八、典型运维 / 日志分析案例
+
+#### 1️⃣ Top 10 服务错误数
+
+```json
+"terms": {
+  "field": "service.keyword",
+  "size": 10
+}
+```
+
+* query 中过滤 `status >= 500`
+
+---
+
+#### 2️⃣ 按主机统计请求量
+
+```json
+"terms": {
+  "field": "host.ip",
+  "size": 20
+}
+```
+
+---
+
+#### 3️⃣ 服务 + 状态码二维统计
+
+```json
+"aggs": {
+  "by_service": {
+    "terms": {
+      "field": "service.keyword"
+    },
+    "aggs": {
+      "by_status": {
+        "terms": {
+          "field": "status"
+        }
+      }
+    }
+  }
+}
+```
+
+---
+
+### 九、terms vs SQL 对照
+
+```sql
+SELECT status, COUNT(*)
+FROM logs
+GROUP BY status
+ORDER BY COUNT(*) DESC
+LIMIT 10;
+```
+
+对应 ES：
+
+```json
+"terms": {
+  "field": "status",
+  "size": 10,
+  "order": { "_count": "desc" }
+}
+```
+
+
+
+## 时间（date_histogram）分组/分桶
+
+### 一、`date_histogram` 是什么？
+
+`date_histogram` 是 **按时间字段进行分桶（Bucket）的聚合**，常用于：
+
+* ⏱️ **按分钟 / 小时 / 天统计指标**
+* 📊 **监控数据趋势（CPU、内存、QPS）**
+* 📈 **日志量、错误数随时间变化**
+* 🔍 **SkyWalking / APM / Trace 数据分析**
+
+👉 本质：
+
+> **把时间轴切成一个个时间桶，每个桶里再做统计**
+
+---
+
+### 二、最基本用法
+
+#### 示例：按小时统计日志数量
+
+```json
+{
+  "size": 0,
+  "aggs": {
+    "logs_per_hour": {
+      "date_histogram": {
+        "field": "@timestamp",
+        "calendar_interval": "hour"
+      }
+    }
+  }
+}
+```
+
+#### 返回结果结构
+
+```json
+"aggregations": {
+  "logs_per_hour": {
+    "buckets": [
+      {
+        "key": 1705298400000,
+        "key_as_string": "2024-01-15T10:00:00.000Z",
+        "doc_count": 12345
+      }
+    ]
+  }
+}
+```
+
+#### 字段说明
+
+| 字段            | 含义               |
+| --------------- | ------------------ |
+| `key`           | 时间戳（毫秒）     |
+| `key_as_string` | 人类可读时间       |
+| `doc_count`     | 该时间桶内的文档数 |
+
+---
+
+### 三、`calendar_interval` vs `fixed_interval`（⚠️重点）
+
+#### 1️⃣ calendar_interval（**推荐用于自然时间**）
+
+> 和日历有关，会考虑：
+
+* 月份天数不同
+* 闰年
+* 夏令时（DST）
+
+```json
+"calendar_interval": "day"
+```
+
+支持：
+
+* `minute`
+* `hour`
+* `day`
+* `week`
+* `month`
+* `year`
+
+📌 **日志 / 业务 / 报表首选**
+
+---
+
+#### 2️⃣ fixed_interval（**固定毫秒长度**）
+
+> 严格按毫秒切分，不管日历
+
+```json
+"fixed_interval": "10m"
+```
+
+支持：
+
+* `ms`
+* `s`
+* `m`
+* `h`
+* `d`
+
+📌 **监控指标（Prometheus 风格）更合适**
+
+---
+
+#### 对比总结
+
+| 场景                | 推荐                |
+| ------------------- | ------------------- |
+| 按天、按月报表      | `calendar_interval` |
+| 精确 5 分钟 / 30 秒 | `fixed_interval`    |
+| 存在 DST            | `calendar_interval` |
+
+---
+
+### 四、时间范围控制（query + aggs）
+
+⚠️ **聚合本身不负责过滤时间**
+
+```json
+{
+  "query": {
+    "range": {
+      "@timestamp": {
+        "gte": "now-24h",
+        "lte": "now"
+      }
+    }
+  },
+  "aggs": {
+    "per_5m": {
+      "date_histogram": {
+        "field": "@timestamp",
+        "fixed_interval": "5m"
+      }
+    }
+  }
+}
+```
+
+👉 **最佳实践**：
+
+> **时间过滤一定放在 `query.range` 里**
+
+---
+
+### 五、`time_zone`（国内环境必用）
+
+如果你看到时间桶偏 8 小时，原因就是 **UTC 默认时区**
+
+```json
+"time_zone": "+08:00"
+```
+
+完整示例：
+
+```json
+"date_histogram": {
+  "field": "@timestamp",
+  "calendar_interval": "hour",
+  "time_zone": "+08:00"
+}
+```
+
+📌 **国内日志、监控几乎必加**
+
+---
+
+### 六、空桶补齐（`min_doc_count` + `extended_bounds`）
+
+#### 问题：
+
+> 没数据的时间段直接消失？
+
+#### 解决方案
+
+```json
+"date_histogram": {
+  "field": "@timestamp",
+  "fixed_interval": "5m",
+  "min_doc_count": 0,
+  "extended_bounds": {
+    "min": "now-1h",
+    "max": "now"
+  }
+}
+```
+
+效果：
+
+* ⏳ 即使某 5 分钟没有数据
+* 也会返回 `doc_count = 0`
+
+📌 **画监控曲线必用**
+
+---
+
+### 七、子聚合（真正的威力）
+
+#### 示例：每分钟错误数
+
+```json
+{
+  "aggs": {
+    "per_min": {
+      "date_histogram": {
+        "field": "@timestamp",
+        "fixed_interval": "1m"
+      },
+      "aggs": {
+        "error_count": {
+          "filter": {
+            "term": {
+              "level": "ERROR"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+返回结构：
+
+```json
+"buckets": [
+  {
+    "key_as_string": "2024-01-15T10:01:00",
+    "doc_count": 200,
+    "error_count": {
+      "doc_count": 5
+    }
+  }
+]
+```
+
+---
+
+### 八、结合指标聚合（metrics）
+
+#### 示例：每 5 分钟 CPU 平均值
+
+```json
+{
+  "aggs": {
+    "cpu_per_5m": {
+      "date_histogram": {
+        "field": "@timestamp",
+        "fixed_interval": "5m"
+      },
+      "aggs": {
+        "avg_cpu": {
+          "avg": {
+            "field": "cpu_usage"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+📌 **运维监控 / APM 标准用法**
+
+---
+
+### 九、性能与坑点（重要）
+
+#### ❌ 常见坑
+
+| 问题          | 原因                 |
+| ------------- | -------------------- |
+| 聚合很慢      | 时间范围太大         |
+| 桶数量爆炸    | interval 太小        |
+| 时间错 8 小时 | 没设置 `time_zone`   |
+| 没有空桶      | 没加 `min_doc_count` |
+
+---
+
+#### ✅ 性能建议
+
+* 时间范围 **<= 7 天**
+* 分桶数量 **< 10,000**
+* 大范围用 **rollup / downsample**
+* 指标索引建议 **doc_values**
+
+---
+
+### 十、典型运维 / APM 场景速查
+
+| 场景     | interval         |
+| -------- | ---------------- |
+| 实时监控 | `1m` / `30s`     |
+| 日志趋势 | `1h`             |
+| 日报     | `1d`             |
+| 月报     | `1M`（calendar） |
+
+---
+
+### 十一、一句话总结
+
+> **`date_histogram` = 时间序列分析核心**
+>
+> * `query` 控制范围
+> * `interval` 决定精度
+> * `time_zone` 决定正确性
+> * 子聚合决定分析深度
+
+---
+
+
+
+## 区间自定义（range）分桶/分组
+
+### 一、`range` 聚合是什么？
+
+`range` 是一种 **Bucket 聚合**，用于：
+
+> **按数值区间 / 时间区间 手动分桶**
+
+📌 典型用途：
+
+* 响应时间区间统计（RT <100ms、100–500ms、>1s）
+* 请求大小分布
+* 状态码范围
+* 金额区间
+* Trace / Span 耗时分布
+
+---
+
+### 二、最基础示例（数值区间）
+
+#### 示例：请求耗时分布（单位 ms）
+
+```json
+{
+  "size": 0,
+  "aggs": {
+    "latency_range": {
+      "range": {
+        "field": "duration",
+        "ranges": [
+          { "to": 100 },
+          { "from": 100, "to": 500 },
+          { "from": 500, "to": 1000 },
+          { "from": 1000 }
+        ]
+      }
+    }
+  }
+}
+```
+
+#### 返回结果
+
+```json
+"aggregations": {
+  "latency_range": {
+    "buckets": [
+      { "key": "*-100.0", "to": 100, "doc_count": 1200 },
+      { "key": "100.0-500.0", "from": 100, "to": 500, "doc_count": 860 },
+      { "key": "500.0-1000.0", "from": 500, "to": 1000, "doc_count": 240 },
+      { "key": "1000.0-*", "from": 1000, "doc_count": 35 }
+    ]
+  }
+}
+```
+
+---
+
+### 三、区间规则（非常重要）
+
+| 写法              | 含义            |
+| ----------------- | --------------- |
+| `from`            | **包含**（>=）  |
+| `to`              | **不包含**（<） |
+| `{ "to": 100 }`   | `< 100`         |
+| `{ "from": 100 }` | `>= 100`        |
+
+⚠️ 不允许区间重叠，否则结果不可靠。
+
+---
+
+### 四、时间字段的 `range`（日期区间）
+
+`range` **可以直接作用在 `date` 字段**
+
+#### 示例：按时间区间统计请求数
+
+```json
+{
+  "aggs": {
+    "time_range": {
+      "range": {
+        "field": "@timestamp",
+        "ranges": [
+          { "to": "now-1h" },
+          { "from": "now-1h", "to": "now" }
+        ]
+      }
+    }
+  }
+}
+```
+
+📌 适合：
+
+* 对比 最近 1 小时 vs 更早
+* SLA 对比
+
+---
+
+### 五、自定义 key（强烈推荐）
+
+```json
+"ranges": [
+  { "key": "fast", "to": 100 },
+  { "key": "normal", "from": 100, "to": 500 },
+  { "key": "slow", "from": 500 }
+]
+```
+
+返回结果：
+
+```json
+"key": "fast"
+```
+
+📌 **用于前端 / 报表非常友好**
+
+---
+
+### 六、子聚合（核心用法）
+
+#### 示例：各耗时区间的错误数
+
+```json
+{
+  "aggs": {
+    "latency": {
+      "range": {
+        "field": "duration",
+        "ranges": [
+          { "to": 200 },
+          { "from": 200 }
+        ]
+      },
+      "aggs": {
+        "error_count": {
+          "filter": {
+            "term": {
+              "status": "ERROR"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+---
+
+### 七、`range` vs `histogram` vs `date_histogram`
+
+| 场景         | 用哪个           |
+| ------------ | ---------------- |
+| 自定义区间   | `range`          |
+| 等宽数值分桶 | `histogram`      |
+| 时间序列     | `date_histogram` |
+| RT 分布      | `range`          |
+| QPS 曲线     | `date_histogram` |
+
+---
+
+### 八、性能与注意事项
+
+#### ❌ 常见坑
+
+| 问题     | 原因            |
+| -------- | --------------- |
+| 统计不准 | 区间重叠        |
+| 查询慢   | ranges 太多     |
+| 时间错乱 | date 未统一时区 |
+
+#### ✅ 建议
+
+* 区间数量 **< 20**
+* 数值字段必须是 `numeric`
+* 时间字段注意 UTC / 本地时区
+* 大数据量建议 **预聚合**
+
+---
+
+### 九、运维 / APM 经典案例
+
+#### Trace 耗时分布
+
+```json
+"ranges": [
+  { "key": "<100ms", "to": 100 },
+  { "key": "100~300ms", "from": 100, "to": 300 },
+  { "key": "300~1s", "from": 300, "to": 1000 },
+  { "key": ">1s", "from": 1000 }
+]
+```
+
+---
+
+### 十、一句话总结
+
+> **`range` = 人工定义分桶**
+>
+> * 精准控制区间
+> * 非等宽
+> * 非时间序列
+> * 分布分析神器
+
+## 等宽（histogram）分桶/分组
+
+### 一、`histogram` 聚合是什么？
+
+`histogram` 是 **数值型等宽分桶（Bucket）聚合**：
+
+> **按照固定步长（interval）把数值字段切成连续区间**
+
+📌 常见用途：
+
+* 接口耗时分布（0–100、100–200、200–300 ms…）
+* 请求大小分布
+* 数值型指标分布（CPU、内存、磁盘 IO）
+* Span / Trace duration 分布（等宽）
+
+---
+
+### 二、最基本用法
+
+#### 示例：接口耗时（每 100ms 一个桶）
+
+```json
+{
+  "size": 0,
+  "aggs": {
+    "latency_histogram": {
+      "histogram": {
+        "field": "duration",
+        "interval": 100
+      }
+    }
+  }
+}
+```
+
+#### 返回结果示例
+
+```json
+"aggregations": {
+  "latency_histogram": {
+    "buckets": [
+      { "key": 0.0,   "doc_count": 320 },
+      { "key": 100.0, "doc_count": 860 },
+      { "key": 200.0, "doc_count": 410 }
+    ]
+  }
+}
+```
+
+#### `key` 的含义
+
+> **桶的起始值**
+
+* key = 100 → `[100, 200)`
+
+---
+
+### 三、`interval` 的工作方式（核心）
+
+假设：
+
+```json
+"interval": 100
+```
+
+那么桶是：
+
+| key  | 范围      |
+| ---- | --------- |
+| 0    | [0,100)   |
+| 100  | [100,200) |
+| 200  | [200,300) |
+
+📌 **左闭右开**
+
+---
+
+### 四、`min_doc_count` + `extended_bounds`（补空桶）
+
+#### 问题
+
+没有数据的区间不会返回？
+
+#### 解决
+
+```json
+"histogram": {
+  "field": "duration",
+  "interval": 100,
+  "min_doc_count": 0,
+  "extended_bounds": {
+    "min": 0,
+    "max": 1000
+  }
+}
+```
+
+📌 **画分布图 / 热力图必用**
+
+---
+
+### 五、`offset`（控制桶起点）
+
+#### 场景
+
+不想从 0 开始？
+
+```json
+"offset": 50
+```
+
+效果：
+
+| key  | 区间      |
+| ---- | --------- |
+| 50   | [50,150)  |
+| 150  | [150,250) |
+
+📌 常用于：
+
+* 金额区间
+* 非 0 起始指标
+
+---
+
+### 六、子聚合（真正的分析能力）
+
+#### 示例：每个耗时区间的错误数
+
+```json
+{
+  "aggs": {
+    "latency": {
+      "histogram": {
+        "field": "duration",
+        "interval": 200
+      },
+      "aggs": {
+        "error_count": {
+          "filter": {
+            "term": {
+              "status": "ERROR"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+---
+
+### 七、`histogram` vs `range`（重点对比）
+
+| 对比项   | histogram | range      |
+| -------- | --------- | ---------- |
+| 分桶方式 | 等宽      | 手动定义   |
+| 区间数量 | 自动      | 手动       |
+| 适合     | 分布分析  | SLA / 阈值 |
+| 桶边界   | 自动      | 精确控制   |
+| 常用场景 | RT 分布   | RT 等级    |
+
+📌 **想看分布 → histogram**
+📌 **想看区间等级 → range**
+
+---
+
+### 八、`histogram` vs `date_histogram`
+
+| 项目     | histogram | date_histogram |
+| -------- | --------- | -------------- |
+| 字段类型 | numeric   | date           |
+| interval | 数值      | 时间           |
+| 时区     | 无        | 有             |
+| 场景     | 数值分布  | 时间趋势       |
+
+---
+
+### 九、性能与坑点（重要）
+
+#### ❌ 常见坑
+
+| 问题     | 原因                 |
+| -------- | -------------------- |
+| 桶太多   | interval 太小        |
+| 查询慢   | extended_bounds 太大 |
+| 无法使用 | 字段不是 numeric     |
+| 结果异常 | offset 用错          |
+
+#### ✅ 建议
+
+* 桶数量 **< 200**
+* interval ≥ 数据最小精度
+* 大范围数据考虑 **预聚合 / rollup**
+* 指标字段必须有 `doc_values`
+
+---
+
+### 十、运维 / APM 典型案例
+
+#### SkyWalking Span 耗时分布
+
+```json
+"histogram": {
+  "field": "span.duration",
+  "interval": 100
+}
+```
+
+#### JVM GC 停顿时间分布
+
+```json
+"histogram": {
+  "field": "gc_pause",
+  "interval": 50
+}
+```
+
+---
+
+### 十一、一句话总结
+
+> **`histogram` = 等宽数值分布分析利器**
+>
+> * 自动分桶
+> * 连续区间
+> * 非时间
+> * 分布可视化首选
+
+
+
+## min_doc_count` + `extended_bounds
+
+### 一、它们分别解决什么问题？
+
+#### 1️⃣ `min_doc_count`
+
+> **控制是否返回“空桶”**
+
+| 值          | 含义                   |
+| ----------- | ---------------------- |
+| `1`（默认） | 只返回有数据的桶       |
+| `0`         | **即使没数据也返回桶** |
+
+📌 但：**光有 `min_doc_count: 0` 还不够**
+
+---
+
+#### 2️⃣ `extended_bounds`
+
+> **强制指定桶的起止范围**
+
+```json
+"extended_bounds": {
+  "min": 0,
+  "max": 1000
+}
+```
+
+📌 否则 ES 只会根据 **已有数据** 决定桶范围
+
+---
+
+### 二、为什么一定要一起用？
+
+#### ❌ 只有 `min_doc_count: 0`
+
+```json
+"histogram": {
+  "field": "duration",
+  "interval": 100,
+  "min_doc_count": 0
+}
+```
+
+❗ 问题：
+
+* ES **不知道你要多大范围**
+* 仍然不会补齐首尾空桶
+
+---
+
+#### ❌ 只有 `extended_bounds`
+
+```json
+"extended_bounds": {
+  "min": 0,
+  "max": 1000
+}
+```
+
+❗ 问题：
+
+* 默认 `min_doc_count = 1`
+* **空桶仍然被过滤**
+
+---
+
+#### ✅ 正确姿势（必须同时存在）
+
+```json
+"histogram": {
+  "field": "duration",
+  "interval": 100,
+  "min_doc_count": 0,
+  "extended_bounds": {
+    "min": 0,
+    "max": 1000
+  }
+}
+```
+
+👉 **所有桶都会返回，包括 doc_count = 0**
+
+---
+
+### 三、`date_histogram` 示例（最常见）
+
+#### 场景：最近 1 小时，每 5 分钟一条监控点
+
+```json
+{
+  "size": 0,
+  "query": {
+    "range": {
+      "@timestamp": {
+        "gte": "now-1h",
+        "lte": "now"
+      }
+    }
+  },
+  "aggs": {
+    "per_5m": {
+      "date_histogram": {
+        "field": "@timestamp",
+        "fixed_interval": "5m",
+        "time_zone": "+08:00",
+        "min_doc_count": 0,
+        "extended_bounds": {
+          "min": "now-1h",
+          "max": "now"
+        }
+      }
+    }
+  }
+}
+```
+
+📌 效果：
+
+* 每 5 分钟一个点
+* 即使没有数据，也会返回
+* 画折线图 **不会断**
+
+---
+
+### 四、`histogram` 示例（数值分布）
+
+#### 场景：RT 分布 0~2000ms，每 200ms 一档
+
+```json
+"histogram": {
+  "field": "duration",
+  "interval": 200,
+  "min_doc_count": 0,
+  "extended_bounds": {
+    "min": 0,
+    "max": 2000
+  }
+}
+```
+
+---
+
+### 五、`extended_bounds` 的 min / max 写法
+
+#### 1️⃣ 数值字段
+
+```json
+"extended_bounds": {
+  "min": 0,
+  "max": 1000
+}
+```
+
+---
+
+#### 2️⃣ 日期字段（date_histogram）
+
+```json
+"extended_bounds": {
+  "min": "2024-01-01T00:00:00",
+  "max": "2024-01-01T23:59:59"
+}
+```
+
+或相对时间：
+
+```json
+"min": "now-24h",
+"max": "now"
+```
+
+⚠️ **时间要和 `time_zone` 语义一致**
+
+---
+
+### 六、和 `hard_bounds` 的区别（容易混）
+
+| 项目         | extended_bounds | hard_bounds |
+| ------------ | --------------- | ----------- |
+| 是否补桶     | ✅ 是            | ❌ 否        |
+| 是否裁剪数据 | ❌ 不裁          | ✅ 裁        |
+| 常用场景     | 补齐曲线        | 强制截断    |
+
+📌 **画图用 extended_bounds**
+📌 **限制统计范围用 hard_bounds**
+
+---
+
+### 七、常见坑总结（非常重要）
+
+#### ❌ 坑 1：extended_bounds ≠ 过滤数据
+
+```json
+"extended_bounds": { "min": 0, "max": 100 }
+```
+
+👉 **不会过滤 >100 的数据**
+👉 过滤必须用 `query.range`
+
+---
+
+#### ❌ 坑 2：桶数量爆炸
+
+```json
+interval = 1
+range = 1 天
+```
+
+❗ 86400 个桶，ES 会很慢
+
+---
+
+#### ❌ 坑 3：date_histogram 没加 time_zone
+
+导致：
+
+* 数据对齐错
+* 空桶位置不对
+
+---
+
+### 八、性能建议（实战经验）
+
+* 桶数量控制在 **< 1000**
+* 实时监控：
+
+  * `fixed_interval`
+  * `min_doc_count: 0`
+* 报表分析：
+
+  * `calendar_interval`
+* 超大时间范围 → **downsample / rollup**
+
+---
+
+### 九、一句话总结
+
+> **`min_doc_count + extended_bounds` = 补齐时间轴 / 数值轴**
+>
+> * 不会过滤数据
+> * 只负责“补桶”
+> * 画图不断线的关键
+
+
+
+# 数据（统计）计算
+
+## max/sum/avg/count
+
+```
+{
+  "aggs": {
+    "avg_latency": { "avg": { "field": "latency" }},
+    "max_latency": { "max": { "field": "latency" }},
+    "sum_bytes":  { "sum": { "field": "bytes" }},
+    "req_count":  { "value_count": { "field": "trace_id" }}
+  }
+}
+```
+
+> stats(一次返回多个指标)
+
+```
+{
+  "aggs": {
+    "latency_stats": {
+      "stats": {
+        "field": "latency"
+      }
+    }
+  }
+}
+```
+
+返回结果示例
+
+```
+"aggregations" : {
+    "all" : {
+      "count" : 60,
+      "min" : 0.0,
+      "max" : 7.0,
+      "avg" : 3.466666666666667,
+      "sum" : 208.0
+    }
+  }
+
+```
+
+
+
+## Cardinality 去重统计
+
+🔍 理解 Cardinality 聚合
+
+cardinality 聚合用于计算字段中不同值的数量，也称为基数统计。它类似于 SQL 中的 COUNT(DISTINCT field)，能帮你快速了解数据的唯一性。
+
+• 典型应用场景：统计网站的独立访客数（UV）、计算不同商品品牌的数量、分析每月有多少独立用户购买商品。
+
+• 核心特点：cardinality 是一种近似算法，这意味着它可能会存在一定误差，但换来的是处理海量数据时的高性能和低资源消耗。
+
+📝 基本语法与示例
+
+一个最简单的 cardinality 聚合查询如下，它统计 color 字段有多少个不同的值：
+
+```
+GET /cars/_search
+{
+  "size": 0, 
+  "aggs": {
+    "distinct_colors": {
+      "cardinality": {
+        "field": "color"
+      }
+    }
+  }
+}
+```
+
+返回结果示例：
+
+```
+{
+  ...,
+  "aggregations": {
+    "distinct_colors": {
+      "value": 3
+    }
+  }
+}
+```
+
+
+⚙️ 精度控制：precision_threshold 参数
+
+precision_threshold 是控制精度与内存权衡的关键参数。
+
+• 作用：设定一个阈值。当字段的唯一值数量低于此阈值时，统计结果接近 100% 准确；超过阈值时，会牺牲少量精度以节省内存。
+
+• 取值范围：0 到 40000，默认值为 3000。
+
+• 内存估算：内存消耗约为 precision_threshold * 8 字节。例如，设为 100 时，约消耗 800 字节。
+
+```
+GET /cars/_search
+{
+  "size": 0,
+  "aggs": {
+    "distinct_colors": {
+      "cardinality": {
+        "field": "color",
+        "precision_threshold": 100 
+      }
+    }
+  }
+}
+```
+
+
+🧠 算法原理与性能优化
+
+cardinality 聚合基于 HyperLogLog++ (HLL) 算法。该算法通过计算值的哈希值并进行概率估算，以固定的内存空间高效地统计超大基数的数据集。
+
+你可以通过以下方式优化性能：
+
+1. 预计算哈希值（索引时优化）
+   对于非常大或非常高基数的字符串字段，可以在创建索引时使用 murmur3 插件预计算哈希值，将哈希计算从查询时转移到索引时，从而提升查询速度。
+
+   步骤1：定义映射
+
+   ```
+   PUT /my_index/
+   {
+     "mappings": {
+       "properties": {
+         "my_large_field": {
+           "type": "keyword",
+           "fields": {
+             "hash": { 
+               "type": "murmur3"
+             }
+           }
+         }
+       }
+     }
+   }
+   ```
+
+   步骤2：查询哈希字段
+
+   ```
+   GET /my_index/_search
+   {
+     "size": 0,
+     "aggs": {
+       "distinct_values": {
+         "cardinality": {
+           "field": "my_large_field.hash"
+         }
+       }
+     }
+   }
+   ```
+
+   
+
+2. 使用脚本过滤
+   你可以使用 Painless 脚本对参与基数计算的值进行过滤，增加了灵活性。例如，只统计 age 字段大于 30 的唯一值数量：
+
+   ```
+   "aggs": {
+     "distinct_colors": {
+       "cardinality": {
+         "field": "age",
+         "script": "doc['age'].value > 30"
+       }
+     }
+   }
+   ```
+
+   
+
+🔄 组合其他聚合
+
+cardinality 聚合常与其他聚合结合使用，实现更复杂的分析。
+
+• 按时间统计唯一值（如：每月售出多少种颜色的汽车）
+
+```
+GET /sales/_search
+  {
+    "size": 0,
+    "aggs": {
+      "sales_per_month": {
+        "date_histogram": {
+          "field": "sold_date",
+          "calendar_interval": "month"
+        },
+        "aggs": {
+          "distinct_brands": {
+            "cardinality": {
+              "field": "brand"
+            }
+          }
+        }
+      }
+    }
+  }
+```
+
+• 先分组再统计唯一值（如：每个产品类别下有多少独立用户访问）
+
+```
+GET /products/_search
+  {
+    "size": 0,
+    "aggs": {
+      "by_category": {
+        "terms": {
+          "field": "category"
+        },
+        "aggs": {
+          "unique_visitors": {
+            "cardinality": {
+              "field": "user_id"
+            }
+          }
+        }
+      }
+    }
+  }
+```
+
+
+💎 总结与选择
+
+特性 说明
+
+本质 基于 HLL 算法的近似去重计数
+
+优点 速度快，占用内存固定，适合高基数场景
+
+缺点 结果是近似值，存在微小误差
+
+精度控制 使用 precision_threshold 参数平衡精度和内存
+
+性能优化 对高基数长字符串字段可预计算哈希 (murmur3)
+
+希望这份教程能帮助你熟练掌握 cardinality 聚合。如果你有特定的使用场景或遇到更具体的问题，我很乐意提供进一步的帮助。

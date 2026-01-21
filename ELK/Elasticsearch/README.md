@@ -23,8 +23,13 @@
 
 ## 数据建模与管理
 
+[_catAPI接口](./_catAPI接口.md)：快速查看集群、索引、分片、节点状态
+
 [映射（Mapping）](./映射Mapping.md):Elasticsearch 的 Mapping 类似于数据库中的表结构定义，它决定了数据如何被存储和索引
 
 [(Document)文档是什么](./(Document)文档是什么.md)：**Document 是最小的数据单元，相当于数据库中的“一行记录”**
 
 [索引(index)](./Elasticsearch的索引.md)：**Index 是 Elasticsearch 中用于存储一类 Document 的逻辑容器**
+
+[DSL查询语言](./什么是DSL.md)：JSON查询语言，可组合，支持全文检索 + 精确查询 + 聚合 + 排序
+

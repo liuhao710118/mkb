@@ -36,6 +36,8 @@
 
 3.[时间模块](./help/python处理时间教程.md) [datetime模块](./help/datetime模块简介.md) [datetime常用速查表](./help/datetime常用速查表.md)
 
+4.[request网络请求模块](https://docs.python-requests.org/projects/cn/zh-cn/latest/)
+
 
 
 ## 文件

@@ -4320,3 +4320,523 @@ GET /products/_search
 性能优化 对高基数长字符串字段可预计算哈希 (murmur3)
 
 希望这份教程能帮助你熟练掌握 cardinality 聚合。如果你有特定的使用场景或遇到更具体的问题，我很乐意提供进一步的帮助。
+
+
+
+## 百分位 percentiles
+
+------
+
+### 1️⃣ 基本概念
+
+`percentiles` 聚合用于 **计算数值字段在不同百分位上的值**。
+
+- 百分位 (Percentile) 是指数据集排序后 **某个位置的数据值**。
+- 例如，`95th percentile` 表示 **95% 的数据都小于等于这个值**。
+
+常用场景：
+
+- 响应时间分析：`95th percentile` RT = 95% 请求都在这个时间以内。
+- 日志统计：计算错误大小或延迟分布。
+
+------
+
+### 2️⃣ DSL 示例
+
+假设索引 `logs`，字段 `response_time`：
+
+```json
+GET logs/_search
+{
+  "size": 0,
+  "aggs": {
+    "response_time_percentiles": {
+      "percentiles": {
+        "field": "response_time",
+        "percents": [50, 75, 90, 95, 99]
+      }
+    }
+  }
+}
+```
+
+- `percents` 用来指定要计算的百分位。
+- 默认返回的是近似值，内部算法是 **TDigest**。
+
+返回示例：
+
+```json
+{
+  "aggregations": {
+    "response_time_percentiles": {
+      "values": {
+        "50.0": 120,
+        "75.0": 200,
+        "90.0": 350,
+        "95.0": 400,
+        "99.0": 500
+      }
+    }
+  }
+}
+```
+
+- 50th percentile = 120ms → 一半请求 <= 120ms
+- 95th percentile = 400ms → 95% 请求 <= 400ms
+
+------
+
+### 3️⃣ 高精度控制
+
+`percentiles` 聚合可以通过 `hdr` 或 `tdigest` 设置精度：
+
+```json
+GET logs/_search
+{
+  "size": 0,
+  "aggs": {
+    "response_time_percentiles": {
+      "percentiles": {
+        "field": "response_time",
+        "percents": [50, 75, 90, 95, 99],
+        "tdigest": {
+          "compression": 100
+        }
+      }
+    }
+  }
+}
+```
+
+- `compression` 越大 → 精度越高，但内存消耗增加。
+- 默认 `tdigest.compression` = 100。
+
+------
+
+### 4️⃣ 与其他聚合结合
+
+可以嵌套在 `terms` 或 `date_histogram` 中：
+
+```json
+GET logs/_search
+{
+  "size": 0,
+  "aggs": {
+    "by_service": {
+      "terms": { "field": "service.keyword" },
+      "aggs": {
+        "response_time_percentiles": {
+          "percentiles": {
+            "field": "response_time",
+            "percents": [50, 95]
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+- 按 `service` 分组 → 每个服务计算 50th 和 95th 百分位响应时间。
+
+------
+
+### 5️⃣ 注意事项
+
+1. **近似值**：
+   - 大数据量下 `percentiles` 返回的是近似值，但误差可控。
+2. **数值类型字段**：
+   - `percentiles` 只能对 `long`、`float`、`double` 等数值字段使用。
+3. **tdigest vs hdr**：
+   - `tdigest`（默认）适合大多数场景
+   - `hdr` 高精度，适合需要严格准确百分位的场景
+
+## Pipeline 
+
+> 一句话先定调：**Pipeline 聚合 = 对“聚合结果”再做聚合**，而不是对原始文档动手。
+
+---
+
+### 1️⃣ Pipeline 聚合是什么？
+
+普通聚合（`terms` / `avg` / `sum` …）
+👉 **作用在文档上**
+
+Pipeline 聚合
+👉 **作用在“其他聚合的结果上”**
+
+所以它**一定是子聚合**，而且必须指定 `buckets_path`。
+
+典型使用场景：
+
+* 计算增长率 / 环比 / 同比
+* 对每个 bucket 的指标再求 max / avg
+* 过滤 bucket（类似 SQL 的 `having`）
+* 累加、移动平均、导数
+
+---
+
+### 2️⃣ Pipeline 聚合两大类（重点）
+
+#### 🔹 ① Parent Pipeline Aggregations
+
+**对同一个 bucket 里的多个值做计算**
+
+常见的有：
+
+| 聚合                         | 作用           |
+| -------------------------- | ------------ |
+| `bucket_script`            | 自定义脚本计算      |
+| `bucket_selector`          | 按条件过滤 bucket |
+| `bucket_sort`              | 排序 / 分页      |
+| `derivative`               | 导数（变化量）      |
+| `moving_avg` / `moving_fn` | 移动计算         |
+| `cumulative_sum`           | 累计和          |
+
+---
+
+#### 🔹 ② Sibling Pipeline Aggregations
+
+**对一组 bucket 的结果做整体计算**
+
+常见的有：
+
+| 聚合             | 作用             |
+| -------------- | -------------- |
+| `avg_bucket`   | 所有 bucket 的平均值 |
+| `sum_bucket`   | 所有 bucket 求和   |
+| `max_bucket`   | 最大值            |
+| `min_bucket`   | 最小值            |
+| `stats_bucket` | 统计             |
+
+---
+
+### 3️⃣ 核心参数：`buckets_path`
+
+这是 Pipeline 聚合的**灵魂**👇
+
+```text
+buckets_path: <聚合名>[>子聚合名][.metric]
+```
+
+示例结构：
+
+```json
+aggs
+ └─ per_day
+     └─ avg_rt
+ └─ max_rt   ← pipeline
+```
+
+对应路径：
+
+```json
+"buckets_path": "per_day>avg_rt"
+```
+
+---
+
+### 4️⃣ 常见 Pipeline 聚合实战
+
+#### ✅ 1）bucket_script（算增长率 / 比率）
+
+👉 计算 **错误率 = error_count / total_count**
+
+```json
+"error_rate": {
+  "bucket_script": {
+    "buckets_path": {
+      "error": "error_count",
+      "total": "total_count"
+    },
+    "script": "params.error / params.total"
+  }
+}
+```
+
+---
+
+#### ✅ 2）bucket_selector（类似 SQL HAVING）
+
+👉 只保留 **请求数 > 1000 的 bucket**
+
+```json
+"filter_bucket": {
+  "bucket_selector": {
+    "buckets_path": {
+      "cnt": "_count"
+    },
+    "script": "params.cnt > 1000"
+  }
+}
+```
+
+⚠️ 注意：
+
+* **只是过滤结果**，并不会减少 ES 的计算量
+
+---
+
+#### ✅ 3）derivative（变化量 / 增长）
+
+👉 每分钟请求数的变化量
+
+```json
+"req_increase": {
+  "derivative": {
+    "buckets_path": "req_count"
+  }
+}
+```
+
+---
+
+#### ✅ 4）cumulative_sum（累计值）
+
+👉 请求数累计和
+
+```json
+"total_req": {
+  "cumulative_sum": {
+    "buckets_path": "req_count"
+  }
+}
+```
+
+---
+
+#### ✅ 5）avg_bucket（所有 bucket 的平均值）
+
+👉 每天平均请求量
+
+```json
+"avg_daily_req": {
+  "avg_bucket": {
+    "buckets_path": "per_day>req_count"
+  }
+}
+```
+
+---
+
+### 5️⃣ 完整示例（date_histogram + pipeline）
+
+```json
+GET logs/_search
+{
+  "size": 0,
+  "aggs": {
+    "per_minute": {
+      "date_histogram": {
+        "field": "@timestamp",
+        "fixed_interval": "1m"
+      },
+      "aggs": {
+        "req_count": {
+          "value_count": {
+            "field": "_id"
+          }
+        },
+        "req_increase": {
+          "derivative": {
+            "buckets_path": "req_count"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+📈 用于看 **QPS 增长趋势**
+
+---
+
+### 6️⃣ 常见坑（很重要）
+
+1. ❌ Pipeline 聚合不能单独存在
+
+   * **必须依赖其他聚合**
+
+2. ❌ 不能跨层级随便引用
+
+   * `buckets_path` 路径必须合法
+
+3. ⚠️ `bucket_selector` 不省资源
+
+   * 它是 **后处理**
+
+4. ⚠️ `derivative` 需要有序 bucket
+
+   * 一般配合 `date_histogram`
+
+---
+
+### 7️⃣ 一句话总结
+
+> **普通聚合算“数”，Pipeline 聚合算“数的关系”**
+
+
+
+# 结果高亮（highlight）
+
+> **Elasticsearch DSL 的高亮（highlight）**，那就是用来在搜索结果里把**命中的关键词标出来**的功能，常用于日志、全文检索、运维排障这类场景 👍
+
+下面给你一个**最常用、最好理解的示例**。
+
+---
+
+### 一、最简单的 DSL 高亮示例
+
+```json
+GET my_index/_search
+{
+  "query": {
+    "match": {
+      "message": "error timeout"
+    }
+  },
+  "highlight": {
+    "fields": {
+      "message": {}
+    }
+  }
+}
+```
+
+👉 返回结果里会多一个 `highlight` 字段：
+
+```json
+"highlight": {
+  "message": [
+    "request <em>error</em> cause <em>timeout</em>"
+  ]
+}
+```
+
+---
+
+### 二、自定义高亮标签（前后缀）
+
+前端一般不想用 `<em>`，可以自定义：
+
+```json
+"highlight": {
+  "pre_tags": ["<span class='hl'>"],
+  "post_tags": ["</span>"],
+  "fields": {
+    "message": {}
+  }
+}
+```
+
+前端 CSS：
+
+```css
+.hl {
+  color: red;
+  font-weight: bold;
+}
+```
+
+---
+
+### 三、多个字段同时高亮
+
+```json
+"highlight": {
+  "fields": {
+    "message": {},
+    "exception": {},
+    "traceId": {}
+  }
+}
+```
+
+只要字段被 query 命中，就会返回对应高亮内容。
+
+---
+
+### 四、常见高亮参数（很实用）
+
+```json
+"highlight": {
+  "fields": {
+    "message": {
+      "fragment_size": 150,
+      "number_of_fragments": 3,
+      "no_match_size": 50
+    }
+  }
+}
+```
+
+参数说明：
+
+| 参数                    | 作用         |
+| --------------------- | ---------- |
+| `fragment_size`       | 每个高亮片段长度   |
+| `number_of_fragments` | 返回几个片段     |
+| `no_match_size`       | 没命中也返回部分内容 |
+
+---
+
+### 五、highlight 类型（重点）
+
+```json
+"highlight": {
+  "fields": {
+    "message": {
+      "type": "unified"
+    }
+  }
+}
+```
+
+常见三种：
+
+| 类型        | 说明                      |
+| --------- | ----------------------- |
+| `unified` | **默认 & 推荐**，效果最好        |
+| `plain`   | 简单高亮，性能一般               |
+| `fvh`     | 需要 `term_vector`，大文本性能好 |
+
+> 日志、运维检索：**unified 就够了**
+
+---
+
+### 六、在日志 / 运维场景的一个典型例子
+
+```json
+GET logs-*/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        { "match": { "level": "ERROR" }},
+        { "match": { "message": "timeout" }}
+      ]
+    }
+  },
+  "highlight": {
+    "pre_tags": ["<mark>"],
+    "post_tags": ["</mark>"],
+    "fields": {
+      "message": {}
+    }
+  }
+}
+```
+
+---
+
+### 七、几个**坑点提醒**（很重要）
+
+1. **keyword 类型不能高亮**
+
+   * 必须是 `text`
+2. `match` / `query_string` 才会触发高亮
+3. `_source` 被关闭，高亮可能异常
+4. 中文分词效果取决于分词器（ik / smart）
+
+---

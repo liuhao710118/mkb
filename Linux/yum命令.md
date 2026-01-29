@@ -228,6 +228,9 @@ yum reinstall --downloadonly  --downloaddir=. nginx
 
 ```bash
 rpm -Uvh *.rpm
+
+#将下载目录下的所有 .rpm文件拷贝到离线机器后，推荐使用 yum localinstall进行安装，因为它能自动处理包之间的依赖关系，比强制安装更安全
+sudo yum localinstall *.rpm -y
 ```
 
 ------

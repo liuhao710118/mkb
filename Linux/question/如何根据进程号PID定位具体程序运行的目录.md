@@ -22,7 +22,19 @@ cat /proc/1234/cmdline | tr '\0' ' '
 ps -p {pid} -o pid,cmd
 ```
 
+## 查看当前进程的环境变量
 
+```bash
+cat /proc/{PID}/environ
+```
+
+
+
+## 查看当前程序的执行目录
+
+```bash
+ls -l /proc/{PID}/cwd
+```
 
 
 

@@ -239,7 +239,3 @@ grep -C 2 "listen" /etc/nginx/nginx.conf
 | 统计匹配次数                | `grep -o "pattern" file                     |
 | 查看上下文                  | `grep -C 3 "pattern" file`                  |
 
-------
-
-是否希望我把这份教程 **整理成 PDF（带目录和示例对照）**，方便打印或收藏？
- 我可以帮你生成一份排版精美的版本。

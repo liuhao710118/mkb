@@ -58,6 +58,8 @@
 
 [pkill命令](./pkill命令.md)：用于 **根据进程名称或匹配规则结束进程** 用-f匹配命令行关键字关闭程序
 
+[pgrep命令](./pgrep命令.md)：pgrep = ps + grep + 提取PID
+
 ## 压缩与解压
 
 [zip命令](./zip命令.md)：`zip` 和 `unzip` 是 Linux 中最常用的**压缩与解压工具**之一，兼容 Windows 的 `.zip` 格式。
@@ -122,7 +124,7 @@
 
 [vim编辑器](./vim编辑器.md)：Vim（Vi IMproved）是一个功能强大的文本编辑器，是Unix系统默认编辑器vi的增强版
 
-[sed命令.md](./sed命令.md)：主要用于对文本进行**查找、替换、删除、插入、过滤**等操作
+[sed命令](./sed命令.md)：主要用于对文本进行**查找、替换、删除、插入、过滤**等操作
 
 
 
@@ -250,6 +252,18 @@
 
 
 
+## 服务管理
+
+[systemctl命令](./systemctl命令.md)：**控制系统中的各种服务（service）和资源**
+
+[journalctl命令](./journalctl命令.md)：`journalctl` 是 `systemd` 的日志查看工具
+
+
+
+
+
 # 在平常的运维中遇到的问题
 
 1.[如何根据进程号PID定位具体程序运行的目录](./question/如何根据进程号PID定位具体程序运行的目录.md)
+
+2.[配置SSH免密登录原理.md](question/配置SSH免密登录原理.md)

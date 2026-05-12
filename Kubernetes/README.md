@@ -20,6 +20,24 @@
 
 
 
+# 概念集合
+
+[kubernetes中的yaml是什么](./Kubernetes中YAML详解笔记.md)
+
+[kubernetes中什么是POD？](./Kubernetes中的Pod详解笔记.md)
+
+[kubernetes中的deployment](Kubernetes中Deployment与ReplicaSet详解.md)
+
+[kubernetes中的service](Kubernetes_Service详解.md)：流量分东西流量，和南北流量 东西流量就是集群内部横向通信，南北流量就是外部访问集群内部通信
+
+[kubernetes中的ingress](Kubernetes_Ingress详解.md)：它是 Kubernetes 对外暴露 Web 服务最核心组件之一。
+
 # 常用命令集
 
 [kubeclt get命令](./commands/kubectl_get命令.md)： Kubernetes 中最基础、最常用的命令之一，用于**查询和列出集群中的资源**
+
+[kubectl logs命令](commands/kubectl_logs命令详解.md)：查看容器标准输出日志
+
+[kubectl exec命令](commands/kubectl_exec命令详解.md)：进入容器执行命令
+
+[kubectl cp命令](commands/kubectl_cp命令详解.md)：Pod 与本地之间复制文件

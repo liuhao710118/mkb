@@ -10,6 +10,10 @@
 
 3.[containerd常用命令](./容器化/containerd常用命令.md)
 
+4.[crictl常用命令集合](./容器化/crictl常用命令集合.md)
+
+5.[kubernetes集合](./Kubernetes/readme.md)
+
 ## 数据库
 
 1.[Elasticsearch参考](./ELK/Elasticsearch/README.md)

@@ -250,7 +250,7 @@ kubectl logs nginx --timestamps
 
 ------
 
-# 查看所有容器
+## 查看所有容器
 
 ```bash
 kubectl logs nginx-pod --all-containers=true
@@ -312,7 +312,7 @@ kubectl logs -l app=nginx --max-log-requests=10
 
 ------
 
-# 1. Pod 起不来
+## 1. Pod 起不来
 
 先：
 
@@ -324,7 +324,7 @@ kubectl get pods
 
 ------
 
-# 2. 查看详细信息
+## 2. 查看详细信息
 
 ```bash
 kubectl describe pod nginx
@@ -332,7 +332,7 @@ kubectl describe pod nginx
 
 ------
 
-# 3. 查看日志
+## 3. 查看日志
 
 ```bash
 kubectl logs nginx
@@ -340,7 +340,7 @@ kubectl logs nginx
 
 ------
 
-# 4. 如果重启
+## 4. 如果重启
 
 ```bash
 kubectl logs nginx --previous
@@ -352,7 +352,7 @@ kubectl logs nginx --previous
 
 ------
 
-# 1. CrashLoopBackOff
+## 1. CrashLoopBackOff
 
 ```bash
 kubectl logs pod --previous
@@ -366,7 +366,7 @@ kubectl logs pod --previous
 
 ------
 
-# 2. ImagePullBackOff
+## 2. ImagePullBackOff
 
 logs 通常没用。
 
@@ -386,7 +386,7 @@ kubectl describe pod
 
 ------
 
-# 3. OOMKilled
+## 3. OOMKilled
 
 日志最后可能：
 
@@ -480,7 +480,7 @@ Vector
 
 ------
 
-# 1. 不写文件
+## 1. 不写文件
 
 推荐：
 
@@ -490,13 +490,13 @@ stdout/stderr
 
 ------
 
-# 2. 使用 JSON 日志
+## 2. 使用 JSON 日志
 
 方便 ELK 检索。
 
 ------
 
-# 3. 日志加 traceId
+## 3. 日志加 traceId
 
 方便链路追踪。
 
@@ -589,7 +589,7 @@ kubectl logs pod-name --timestamps
 
 ------
 
-# 举例
+## 举例
 
 ------
 
@@ -662,7 +662,7 @@ pods/log
 
 ------
 
-# Pod 状态异常
+## Pod 状态异常
 
 ```bash
 kubectl get pods
@@ -676,7 +676,7 @@ CrashLoopBackOff
 
 ------
 
-# 查看日志
+## 查看日志
 
 ```bash
 kubectl logs nginx
@@ -686,7 +686,7 @@ kubectl logs nginx
 
 ------
 
-# 查看 previous
+## 查看 previous
 
 ```bash
 kubectl logs nginx --previous
@@ -700,7 +700,7 @@ java.lang.OutOfMemoryError
 
 ------
 
-# 解决
+## 解决
 
 修改：
 
@@ -716,7 +716,7 @@ resources:
 
 ------
 
-# 1. kubectl logs 看什么
+## 1. kubectl logs 看什么
 
 查看：
 
@@ -726,7 +726,7 @@ stdout/stderr
 
 ------
 
-# 2. 为什么 logs 没内容
+## 2. 为什么 logs 没内容
 
 可能：
 
@@ -736,7 +736,7 @@ stdout/stderr
 
 ------
 
-# 3. CrashLoopBackOff 如何排查
+## 3. CrashLoopBackOff 如何排查
 
 ```bash
 kubectl logs --previous
@@ -744,7 +744,7 @@ kubectl logs --previous
 
 ------
 
-# 4. logs 与 describe 区别
+## 4. logs 与 describe 区别
 
 | logs     | describe        |
 | -------- | --------------- |
@@ -752,7 +752,7 @@ kubectl logs --previous
 
 ------
 
-# 5. 为什么生产不用 kubectl logs
+## 5. 为什么生产不用 kubectl logs
 
 因为：
 

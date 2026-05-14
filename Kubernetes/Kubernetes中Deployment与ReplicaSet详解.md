@@ -182,7 +182,7 @@ spec:
 
 ------
 
-# 1. apiVersion
+## 1. apiVersion
 
 ```yaml
 apiVersion: apps/v1
@@ -196,7 +196,7 @@ apps API 组
 
 ------
 
-# 2. kind
+## 2. kind
 
 ```yaml
 kind: Deployment
@@ -206,7 +206,7 @@ kind: Deployment
 
 ------
 
-# 3. metadata
+## 3. metadata
 
 ```yaml
 metadata:
@@ -221,7 +221,7 @@ Deployment 名称。
 
 ------
 
-# 1. replicas
+## 1. replicas
 
 副本数。
 
@@ -237,7 +237,7 @@ replicas: 3
 
 ------
 
-# 2. selector
+## 2. selector
 
 标签选择器。
 
@@ -255,7 +255,7 @@ Deployment 通过标签找到 Pod
 
 ------
 
-# 3. template
+## 3. template
 
 Pod 模板。
 
@@ -271,7 +271,7 @@ template:
 
 ------
 
-# template.metadata
+## template.metadata
 
 ```yaml
 template:
@@ -294,7 +294,7 @@ Deployment 无法管理 Pod
 
 ------
 
-# template.spec
+## template.spec
 
 真正的 Pod 配置。
 
@@ -365,7 +365,7 @@ ReplicaSet 会不断检查：
 
 ------
 
-# 示例
+## 示例
 
 期望：
 
@@ -387,7 +387,7 @@ ReplicaSet：
 
 ------
 
-# 删除 Pod 测试
+## 删除 Pod 测试
 
 ```bash
 kubectl delete pod xxx
@@ -413,7 +413,7 @@ ReplicaSet 自愈
 
 ------
 
-# 修改镜像
+## 修改镜像
 
 ```yaml
 image: nginx:1.26
@@ -427,7 +427,7 @@ kubectl apply -f deploy.yaml
 
 ------
 
-# Kubernetes 会：
+## Kubernetes 会：
 
 ```text
 创建新的 ReplicaSet
@@ -479,7 +479,7 @@ nginx:1.26
 
 ------
 
-# 整个过程
+## 整个过程
 
 ```text
 RS-v1: 3 Pod
@@ -515,13 +515,14 @@ Deployment 保留历史版本。
 
 ------
 
-# 查看历史版本
+## 查看历史版本
 
 ```bash
 kubectl rollout history deployment nginx-deploy
 ```
-
 ------
+
+> 每次更新给更新加上备注 通过添加注解的方式来完成 详情：[通过annotate在deployment每次更新的时候添加备注.md](通过annotate在deployment每次更新的时候添加备注.md)
 
 # 十七、回滚 Deployment
 
@@ -547,7 +548,7 @@ kubectl rollout undo deployment nginx-deploy --to-revision=2
 
 ------
 
-# strategy
+## strategy
 
 ```yaml
 strategy:
@@ -556,7 +557,7 @@ strategy:
 
 ------
 
-# 两种策略
+## 两种策略
 
 | 类型          | 说明     |
 | ------------- | -------- |
@@ -565,7 +566,7 @@ strategy:
 
 ------
 
-# RollingUpdate 参数
+## RollingUpdate 参数
 
 ------
 
@@ -589,7 +590,7 @@ maxUnavailable: 1
 
 ------
 
-# 示例
+## 示例
 
 ```yaml
 strategy:
@@ -606,7 +607,7 @@ strategy:
 
 ------
 
-# 修改 replicas
+## 修改 replicas
 
 ```yaml
 replicas: 5
@@ -614,7 +615,7 @@ replicas: 5
 
 ------
 
-# 或命令行
+## 或命令行
 
 ```bash
 kubectl scale deploy nginx-deploy --replicas=5
@@ -622,7 +623,7 @@ kubectl scale deploy nginx-deploy --replicas=5
 
 ------
 
-# 缩容
+## 缩容
 
 ```bash
 kubectl scale deploy nginx-deploy --replicas=1
@@ -634,7 +635,7 @@ kubectl scale deploy nginx-deploy --replicas=1
 
 ------
 
-# 查看状态
+## 查看状态
 
 ```bash
 kubectl rollout status deploy nginx-deploy
@@ -642,7 +643,7 @@ kubectl rollout status deploy nginx-deploy
 
 ------
 
-# 常见状态
+## 常见状态
 
 | 状态        | 含义   |
 | ----------- | ------ |
@@ -668,7 +669,7 @@ Deployment 已经封装
 
 ------
 
-# ReplicaSet YAML
+## ReplicaSet YAML
 
 ```yaml
 apiVersion: apps/v1
@@ -723,7 +724,7 @@ spec:
 
 ------
 
-# 创建
+## 创建
 
 ```bash
 kubectl apply -f deploy.yaml
@@ -731,7 +732,7 @@ kubectl apply -f deploy.yaml
 
 ------
 
-# 查看
+## 查看
 
 ```bash
 kubectl get deploy
@@ -739,7 +740,7 @@ kubectl get deploy
 
 ------
 
-# 查看详细信息
+## 查看详细信息
 
 ```bash
 kubectl describe deploy nginx-deploy
@@ -747,7 +748,7 @@ kubectl describe deploy nginx-deploy
 
 ------
 
-# 查看 YAML
+## 查看 YAML
 
 ```bash
 kubectl get deploy nginx-deploy -o yaml
@@ -755,7 +756,7 @@ kubectl get deploy nginx-deploy -o yaml
 
 ------
 
-# 删除
+## 删除
 
 ```bash
 kubectl delete deploy nginx-deploy
@@ -767,19 +768,19 @@ kubectl delete deploy nginx-deploy
 
 ------
 
-# 1. 必须加 readinessProbe
+## 1. 必须加 readinessProbe
 
 避免未启动完成接收流量。
 
 ------
 
-# 2. 必须加 resources
+## 2. 必须加 resources
 
 防止资源抢占。
 
 ------
 
-# 3. 不要使用 latest
+## 3. 不要使用 latest
 
 推荐：
 
@@ -789,13 +790,13 @@ image: nginx:1.25.5
 
 ------
 
-# 4. replicas 至少 2
+## 4. replicas 至少 2
 
 避免单点。
 
 ------
 
-# 5. labels 规范化
+## 5. labels 规范化
 
 ```yaml
 labels:
@@ -873,7 +874,7 @@ spec:
 
 ------
 
-# 1. Deployment 和 ReplicaSet 区别
+## 1. Deployment 和 ReplicaSet 区别
 
 | Deployment   | ReplicaSet |
 | ------------ | ---------- |
@@ -884,7 +885,7 @@ spec:
 
 ------
 
-# 2. 为什么 Deployment 不直接管理 Pod
+## 2. 为什么 Deployment 不直接管理 Pod
 
 为了：
 
@@ -896,7 +897,7 @@ spec:
 
 ------
 
-# 3. Deployment 更新原理
+## 3. Deployment 更新原理
 
 ```text
 新建 ReplicaSet
@@ -905,7 +906,7 @@ spec:
 
 ------
 
-# 4. 删除 Pod 为什么会恢复
+## 4. 删除 Pod 为什么会恢复
 
 因为：
 
@@ -915,7 +916,7 @@ ReplicaSet 自愈
 
 ------
 
-# 5. selector 为什么重要
+## 5. selector 为什么重要
 
 Deployment 通过 selector 找到 Pod。
 

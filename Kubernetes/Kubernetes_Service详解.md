@@ -60,7 +60,7 @@ Service 本质上：
 
 ------
 
-# 1. Pod IP 不固定
+## 1. Pod IP 不固定
 
 Service 提供：
 
@@ -70,13 +70,13 @@ Service 提供：
 
 ------
 
-# 2. Pod 动态变化
+## 2. Pod 动态变化
 
 Service 自动发现 Pod。
 
 ------
 
-# 3. 负载均衡
+## 3. 负载均衡
 
 自动转发到多个 Pod。
 
@@ -106,7 +106,7 @@ Label Selector
 
 ------
 
-# 示例
+## 示例
 
 Pod：
 
@@ -150,7 +150,7 @@ spec:
 
 ------
 
-# 1. apiVersion
+## 1. apiVersion
 
 ```yaml
 apiVersion: v1
@@ -158,7 +158,7 @@ apiVersion: v1
 
 ------
 
-# 2. kind
+## 2. kind
 
 ```yaml
 kind: Service
@@ -166,7 +166,7 @@ kind: Service
 
 ------
 
-# 3. metadata
+## 3. metadata
 
 ```yaml
 metadata:
@@ -175,7 +175,7 @@ metadata:
 
 ------
 
-# 4. selector
+## 4. selector
 
 最重要。
 
@@ -192,7 +192,7 @@ selector:
 
 ------
 
-# 5. ports
+## 5. ports
 
 端口映射。
 
@@ -208,19 +208,19 @@ ports:
 
 ------
 
-# port
+## port
 
 Service 暴露端口。
 
 ------
 
-# targetPort
+## targetPort
 
 Pod 容器端口。
 
 ------
 
-# 示例
+## 示例
 
 ```yaml
 ports:
@@ -244,11 +244,11 @@ Service 有四种主要类型。
 
 ------
 
-# 1. ClusterIP（默认）
+## 1. ClusterIP（默认）
 
 ------
 
-## 作用
+### 作用
 
 ```text
 集群内部访问
@@ -256,7 +256,7 @@ Service 有四种主要类型。
 
 ------
 
-## YAML
+### YAML
 
 ```yaml
 spec:
@@ -265,7 +265,7 @@ spec:
 
 ------
 
-## 特点
+### 特点
 
 - 默认类型
 - 只能集群内访问
@@ -273,7 +273,7 @@ spec:
 
 ------
 
-## 示例
+### 示例
 
 ```text
 10.96.0.1
@@ -281,7 +281,7 @@ spec:
 
 ------
 
-# 使用场景
+### 使用场景
 
 - 微服务调用
 - 数据库
@@ -290,11 +290,11 @@ spec:
 
 ------
 
-# 十、NodePort
+## 2. NodePort
 
 ------
 
-# 作用
+### 作用
 
 ```text
 对外暴露服务
@@ -302,7 +302,7 @@ spec:
 
 ------
 
-# 原理
+### 原理
 
 ```text
 NodeIP:Port
@@ -312,7 +312,7 @@ NodeIP:Port
 
 ------
 
-# YAML
+### YAML
 
 ```yaml
 spec:
@@ -326,7 +326,7 @@ spec:
 
 ------
 
-# 访问方式
+### 访问方式
 
 ```text
 http://NodeIP:30080
@@ -334,7 +334,7 @@ http://NodeIP:30080
 
 ------
 
-# NodePort 范围
+### NodePort 范围
 
 默认：
 
@@ -344,13 +344,13 @@ http://NodeIP:30080
 
 ------
 
-# 十一、LoadBalancer
+## 3. LoadBalancer
 
 云环境最常用。
 
 ------
 
-# 原理
+### 原理
 
 ```text
 云厂商负载均衡
@@ -362,7 +362,7 @@ Pod
 
 ------
 
-# YAML
+### YAML
 
 ```yaml
 spec:
@@ -371,7 +371,7 @@ spec:
 
 ------
 
-# 云厂商自动创建
+### 云厂商自动创建
 
 例如：
 
@@ -381,17 +381,17 @@ spec:
 
 ------
 
-# 十二、ExternalName
+## 4. ExternalName
 
 ------
 
-# 作用
+### 作用
 
 DNS 别名。
 
 ------
 
-# YAML
+### YAML
 
 ```yaml
 apiVersion: v1
@@ -412,7 +412,7 @@ spec:
 
 ------
 
-# ClusterIP
+## ClusterIP
 
 ```text
 Client Pod
@@ -432,7 +432,7 @@ Service 真正实现核心。
 
 ------
 
-# kube-proxy 作用
+## kube-proxy 作用
 
 维护：
 
@@ -442,7 +442,7 @@ iptables/ipvs 转发规则
 
 ------
 
-# 工作流程
+## 工作流程
 
 ```text
 Service
@@ -462,7 +462,7 @@ Service 对应的 Pod 列表。
 
 ------
 
-# 查看
+## 查看
 
 ```bash
 kubectl get endpoints
@@ -470,7 +470,7 @@ kubectl get endpoints
 
 ------
 
-# 示例
+## 示例
 
 ```text
 nginx-svc -> 10.244.1.5:80

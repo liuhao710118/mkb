@@ -41,3 +41,13 @@
 [kubectl exec命令](commands/kubectl_exec命令详解.md)：进入容器执行命令
 
 [kubectl cp命令](commands/kubectl_cp命令详解.md)：Pod 与本地之间复制文件
+
+[kubectl events命令](commands/kubectl_events详解.md)：查看 Kubernetes 事件（Event）
+
+[kubectl debug命令](./commands/kubectl_debug命令详解.md)：排障调试命令 可以在不侵入的形式加入到已有的pod/node中进行调试
+
+
+
+# 帮助
+
+[netshoot网络排障工具](./netshoot网络排障工具.md)：netshoot 是 Kubernetes / Docker 场景下非常经典的网络排障工具镜像 配合 **`kubectl debug`**最好

@@ -1,209 +1,119 @@
-# Kubernetes YAML 详解笔记
+# Kubernetes Pod 详解笔记
 
-## 一、什么是 Kubernetes YAML
+在 Kubernetes 中，Pod 是最核心、最基础的对象。
 
-在 Kubernetes 中，几乎所有资源都通过 **YAML 文件**定义。
+你可以理解为：
 
-YAML 的作用：
+> Pod = Kubernetes 中最小的运行单元
 
-- 描述资源对象
-- 声明式配置
-- 便于版本管理
-- 可重复部署
+------
 
-常见命令：
+# 一、Pod 是什么
 
-```bash
-kubectl apply -f nginx.yaml
-kubectl delete -f nginx.yaml
-kubectl get pods
+Pod（豆荚）本质上是：
+
+```text
+一个或多个容器
++ 共享网络
++ 共享存储
++ 共享生命周期
 ```
 
 ------
 
-# 二、YAML 基础语法
+# 二、为什么 Kubernetes 不直接管理容器
 
-## 1. 键值格式
+因为真实业务中：
 
-```yaml
-name: nginx
-image: nginx:1.25
+- 一个应用可能有多个容器
+- 容器之间需要通信
+- 需要共享文件
+- 需要统一调度
+
+所以 Kubernetes 引入：
+
+```text
+Pod
+```
+
+作为最小调度单位。
+
+------
+
+# 三、Pod 的核心特点
+
+------
+
+## 1. 一个 Pod 可以有多个容器
+
+例如：
+
+```text
+nginx 容器
++
+日志采集容器
 ```
 
 ------
 
-## 2. 缩进
+## 2. Pod 内共享网络
 
-YAML 使用空格表示层级。
+Pod 内所有容器：
 
-⚠️ 不能使用 TAB。
+- 共享 IP
+- 共享端口空间
+- localhost 可互通
 
-```yaml
-spec:
-  containers:
-    - name: nginx
-      image: nginx
+例如：
+
+```text
+容器A:
+localhost:8080
+
+容器B:
+curl localhost:8080
+```
+
+可以直接访问。
+
+------
+
+## 3. Pod 内共享存储
+
+通过 Volume：
+
+```text
+volume
+```
+
+多个容器共享文件。
+
+------
+
+# 四、Pod 架构图
+
+```text
++-----------------------------------+
+|              Pod                  |
+|                                   |
+|   +------------+                  |
+|   | nginx      |                  |
+|   | 80         |                  |
+|   +------------+                  |
+|                                   |
+|   +------------+                  |
+|   | sidecar    |                  |
+|   | logs       |                  |
+|   +------------+                  |
+|                                   |
+|   Shared Network Namespace        |
+|   Shared Volume                   |
++-----------------------------------+
 ```
 
 ------
 
-## 3. 数组
-
-使用 `-`
-
-```yaml
-containers:
-  - name: nginx
-    image: nginx
-
-  - name: redis
-    image: redis
-```
-
-------
-
-## 4. 注释
-
-```yaml
-# 这是注释
-```
-
-------
-
-# 三、Kubernetes YAML 四大核心字段
-
-几乎所有资源都有：
-
-```yaml
-apiVersion:
-kind:
-metadata:
-spec:
-```
-
-------
-
-# 四、核心字段详解
-
-------
-
-## 1. apiVersion
-
-表示资源使用哪个 API 版本。
-
-示例：
-
-```yaml
-apiVersion: v1
-```
-
-或者：
-
-```yaml
-apiVersion: apps/v1
-```
-
-常见版本：
-
-| 资源        | apiVersion           |
-| ----------- | -------------------- |
-| Pod         | v1                   |
-| Service     | v1                   |
-| Deployment  | apps/v1              |
-| DaemonSet   | apps/v1              |
-| StatefulSet | apps/v1              |
-| Ingress     | networking.k8s.io/v1 |
-
-------
-
-## 2. kind
-
-表示资源类型。
-
-```yaml
-kind: Pod
-```
-
-常见类型：
-
-| 类型        | 作用         |
-| ----------- | ------------ |
-| Pod         | 最小运行单元 |
-| Deployment  | 无状态部署   |
-| StatefulSet | 有状态应用   |
-| DaemonSet   | 每节点运行   |
-| Service     | 服务暴露     |
-| ConfigMap   | 配置         |
-| Secret      | 密钥         |
-| Ingress     | 七层代理     |
-
-------
-
-## 3. metadata
-
-资源元数据。
-
-```yaml
-metadata:
-  name: nginx
-  namespace: default
-  labels:
-    app: nginx
-```
-
-------
-
-### metadata 常见字段
-
-| 字段        | 作用     |
-| ----------- | -------- |
-| name        | 资源名称 |
-| namespace   | 命名空间 |
-| labels      | 标签     |
-| annotations | 注解     |
-
-------
-
-## labels
-
-标签用于：
-
-- 资源分类
-- Service 选择 Pod
-- Deployment 管理 Pod
-
-```yaml
-labels:
-  app: nginx
-  env: prod
-```
-
-------
-
-## annotations
-
-用于存储说明信息。
-
-```yaml
-annotations:
-  description: "生产环境 nginx"
-```
-
-------
-
-# 五、spec 详解
-
-`spec` 是最重要部分。
-
-真正描述资源行为。
-
-------
-
-# 六、Pod YAML 详解
-
-------
-
-## 最简单 Pod
+# 五、最简单 Pod YAML
 
 ```yaml
 apiVersion: v1
@@ -220,11 +130,134 @@ spec:
 
 ------
 
-# 七、containers 详解
+# 六、Pod YAML 全面解析
 
 ------
 
-## name
+## 1. apiVersion
+
+```yaml
+apiVersion: v1
+```
+
+Pod 属于核心 API。
+
+------
+
+## 2. kind
+
+```yaml
+kind: Pod
+```
+
+表示资源类型。
+
+------
+
+## 3. metadata
+
+```yaml
+metadata:
+  name: nginx-pod
+```
+
+------
+
+## metadata 常见字段
+
+------
+
+### name
+
+Pod 名称。
+
+```yaml
+name: nginx-pod
+```
+
+------
+
+### namespace
+
+命名空间。
+
+```yaml
+namespace: default
+```
+
+------
+
+### labels
+
+标签。
+
+```yaml
+labels:
+  app: nginx
+  env: prod
+```
+
+用途：
+
+- Service 选择 Pod
+- Deployment 管理 Pod
+- 分类资源
+
+------
+
+### annotations
+
+注解。
+
+```yaml
+annotations:
+  description: "生产 nginx"
+```
+
+一般用于：
+
+- 说明信息
+- Prometheus 采集
+- Istio 配置
+
+------
+
+# 七、spec 详解
+
+真正的核心部分。
+
+------
+
+# 八、containers
+
+------
+
+## 基础写法
+
+```yaml
+spec:
+  containers:
+    - name: nginx
+      image: nginx:1.25
+```
+
+------
+
+## 为什么是数组
+
+因为：
+
+```text
+一个 Pod 可以运行多个容器
+```
+
+------
+
+# 九、container 核心字段
+
+------
+
+## 1. name
 
 容器名称。
 
@@ -232,21 +265,53 @@ spec:
 name: nginx
 ```
 
+必须唯一。
+
 ------
 
-## image
+## 2. image
 
-镜像。
+容器镜像。
 
 ```yaml
 image: nginx:1.25
 ```
 
+推荐：
+
+```yaml
+image: nginx:1.25.5
+```
+
+不要使用：
+
+```yaml
+latest
+```
+
 ------
 
-## imagePullPolicy
+## 3. imagePullPolicy
 
 镜像拉取策略。
+
+------
+
+## Always
+
+总是拉取。
+
+```yaml
+imagePullPolicy: Always
+```
+
+------
+
+## IfNotPresent
+
+默认策略。
+
+本地不存在才拉取。
 
 ```yaml
 imagePullPolicy: IfNotPresent
@@ -254,53 +319,117 @@ imagePullPolicy: IfNotPresent
 
 ------
 
-### 三种策略
+## Never
 
-| 值           | 含义           |
-| ------------ | -------------- |
-| Always       | 总是拉取       |
-| IfNotPresent | 本地没有才拉取 |
-| Never        | 永不拉取       |
+永不拉取。
+
+```yaml
+imagePullPolicy: Never
+```
+
+用于离线环境。
 
 ------
 
-## ports
+# 十、ports
 
-开放端口。
+容器端口。
 
 ```yaml
 ports:
   - containerPort: 80
 ```
 
-------
+注意：
 
-## env
+```text
+仅仅是声明
+不会真正暴露端口
+```
 
-环境变量。
+真正对外访问：
 
-```yaml
-env:
-  - name: MYSQL_HOST
-    value: mysql
+```text
+Service
 ```
 
 ------
 
-## command
+# 十一、env 环境变量
 
-覆盖 ENTRYPOINT。
+------
+
+## 普通变量
+
+```yaml
+env:
+  - name: APP_ENV
+    value: prod
+```
+
+------
+
+## 引用 Secret
+
+```yaml
+env:
+  - name: MYSQL_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: mysql-secret
+        key: password
+```
+
+------
+
+## 引用 ConfigMap
+
+```yaml
+env:
+  - name: LOG_LEVEL
+    valueFrom:
+      configMapKeyRef:
+        name: app-config
+        key: level
+```
+
+------
+
+# 十二、command 与 args
+
+------
+
+## Docker 对应关系
+
+| Kubernetes | Docker     |
+| ---------- | ---------- |
+| command    | ENTRYPOINT |
+| args       | CMD        |
+
+------
+
+## 示例
 
 ```yaml
 command: ["sleep"]
 args: ["3600"]
 ```
 
+实际执行：
+
+```bash
+sleep 3600
+```
+
 ------
 
-## resources
+# 十三、resources 资源限制
 
-资源限制。
+生产环境必须配置。
+
+------
+
+## 完整写法
 
 ```yaml
 resources:
@@ -315,84 +444,87 @@ resources:
 
 ------
 
-### CPU 单位
+## requests
 
-| 值    | 含义  |
-| ----- | ----- |
-| 1000m | 1核   |
-| 500m  | 0.5核 |
+调度时保证资源。
 
 ------
 
-### Memory 单位
+## limits
 
-| 值   | 含义     |
-| ---- | -------- |
-| Mi   | Mebibyte |
-| Gi   | Gibibyte |
+最大允许使用。
 
-------
+超出：
 
-# 八、Pod 生命周期探针
+- CPU 被限速
+- Memory OOMKilled
 
 ------
 
-## livenessProbe
+## CPU 单位
 
-存活探针。
+------
 
-失败会重启容器。
+## 1000m = 1核
 
 ```yaml
-livenessProbe:
-  httpGet:
-    path: /
-    port: 80
+500m
+```
 
-  initialDelaySeconds: 10
-  periodSeconds: 5
+表示：
+
+```text
+0.5 CPU
 ```
 
 ------
 
-## readinessProbe
+## Memory 单位
 
-就绪探针。
+| 单位 | 含义           |
+| ---- | -------------- |
+| Mi   | 1024*1024      |
+| Gi   | 1024*1024*1024 |
 
-失败不会重启。
+------
 
-但不会加入 Service。
+# 十四、Volume 存储
+
+------
+
+## 为什么需要 Volume
+
+容器重启后：
+
+```text
+容器文件会丢失
+```
+
+因此需要持久化。
+
+------
+
+# 十五、volumeMounts
+
+挂载目录。
 
 ```yaml
-readinessProbe:
-  tcpSocket:
-    port: 80
+volumeMounts:
+  - name: data
+    mountPath: /data
 ```
 
 ------
 
-## startupProbe
+# 十六、volumes
 
-启动探针。
-
-适合慢启动应用。
-
-```yaml
-startupProbe:
-  httpGet:
-    path: /
-    port: 80
-```
-
-------
-
-# 九、Volume 存储
+定义 Volume。
 
 ------
 
 ## emptyDir
 
-临时目录。
+Pod 删除即销毁。
 
 ```yaml
 volumes:
@@ -404,7 +536,7 @@ volumes:
 
 ## hostPath
 
-挂载宿主机目录。
+宿主机目录。
 
 ```yaml
 volumes:
@@ -412,6 +544,14 @@ volumes:
     hostPath:
       path: /data/logs
 ```
+
+危险：
+
+```text
+强依赖节点
+```
+
+生产少用。
 
 ------
 
@@ -421,313 +561,271 @@ volumes:
 
 ```yaml
 volumes:
-  - name: data
+  - name: mysql-data
+
     persistentVolumeClaim:
       claimName: mysql-pvc
 ```
 
 ------
 
-# 十、volumeMounts
+# 十七、探针（Probe）
+
+[探针详解](./Kubernetes中Pod探针（Probe）详解.md)
+
+# 十九、重启策略 restartPolicy
+
+------
+
+## Always
+
+默认。
 
 ```yaml
-volumeMounts:
-  - name: data
-    mountPath: /var/lib/mysql
+restartPolicy: Always
 ```
 
 ------
 
-# 十一、完整 Pod 示例
+## OnFailure
+
+失败才重启。
+
+------
+
+## Never
+
+永不重启。
+
+------
+
+# 二十、Pod 生命周期
+
+------
+
+## 阶段流程
+
+```text
+Pending
+↓
+ContainerCreating
+↓
+Running
+↓
+Succeeded / Failed
+```
+
+------
+
+## Pod 状态详解
+
+------
+
+### Pending
+
+等待调度。
+
+原因：
+
+- 无节点
+- 资源不足
+- PVC 未绑定
+
+------
+
+### Running
+
+运行中。
+
+------
+
+### Succeeded
+
+成功结束。
+
+常见于 Job。
+
+------
+
+### Failed
+
+运行失败。
+
+------
+
+### CrashLoopBackOff
+
+反复崩溃。
+
+最常见。
+
+------
+
+# 二十一、Pod 常见问题
+
+------
+
+## 1. ImagePullBackOff
+
+镜像拉取失败。
+
+检查：
+
+- 镜像名
+- 仓库权限
+- 网络
+
+------
+
+## 2. CrashLoopBackOff
+
+容器不断重启。
+
+检查：
+
+```bash
+kubectl logs
+```
+
+------
+
+## 3. OOMKilled
+
+内存超限。
+
+增加：
+
+```yaml
+limits.memory
+```
+
+------
+
+# 二十二、Init Container
+
+初始化容器。
+
+主容器启动前执行。
+
+------
+
+## 示例
+
+```yaml
+initContainers:
+  - name: init-db
+    image: busybox
+
+    command:
+      - sh
+      - -c
+      - "echo init"
+```
+
+------
+
+# 二十三、Sidecar 容器
+
+辅助容器。
+
+典型：
+
+- 日志采集
+- envoy
+- 监控
+
+------
+
+# 二十四、多容器 Pod 示例
 
 ```yaml
 apiVersion: v1
 kind: Pod
 
 metadata:
-  name: nginx-demo
-  labels:
-    app: nginx
+  name: multi-container
 
 spec:
   containers:
     - name: nginx
-      image: nginx:1.25
+      image: nginx
 
-      ports:
-        - containerPort: 80
+    - name: sidecar
+      image: busybox
 
-      env:
-        - name: ENV
-          value: prod
-
-      resources:
-        requests:
-          cpu: "100m"
-          memory: "128Mi"
-
-        limits:
-          cpu: "500m"
-          memory: "512Mi"
-
-      volumeMounts:
-        - name: html
-          mountPath: /usr/share/nginx/html
-
-  volumes:
-    - name: html
-      emptyDir: {}
+      command:
+        - sh
+        - -c
+        - tail -f /dev/null
 ```
 
 ------
 
-# 十二、Deployment 详解
+# 二十五、Pod 网络原理
 
-Deployment 用于：
+每个 Pod：
 
-- 副本管理
-- 滚动更新
-- 自动恢复
+```text
+拥有独立 IP
+```
+
+不是容器 IP。
 
 ------
 
-## Deployment YAML
+## Pod 通信
 
-```yaml
-apiVersion: apps/v1
-kind: Deployment
+------
 
-metadata:
-  name: nginx-deploy
+### 同 Pod
 
-spec:
-  replicas: 3
-
-  selector:
-    matchLabels:
-      app: nginx
-
-  template:
-    metadata:
-      labels:
-        app: nginx
-
-    spec:
-      containers:
-        - name: nginx
-          image: nginx:1.25
+```text
+localhost
 ```
 
 ------
 
-# 十三、Deployment 核心字段
+### 不同 Pod
 
-------
-
-## replicas
-
-副本数量。
-
-```yaml
-replicas: 3
+```text
+Pod IP
+Service
 ```
 
 ------
 
-## selector
+# 二十六、为什么生产不用裸 Pod
 
-选择 Pod。
+因为：
 
-```yaml
-selector:
-  matchLabels:
-    app: nginx
+```text
+Pod 删除后不会自动恢复
 ```
 
 ------
 
-## template
+## 正确方式
 
-Pod 模板。
+使用：
 
-```yaml
-template:
+```text
+Deployment
+StatefulSet
+DaemonSet
 ```
 
-Deployment 最终会创建 Pod。
+管理 Pod。
 
 ------
 
-# 十四、Service 详解
-
-Service 用于暴露服务。
+# 二十七、查看 Pod 命令
 
 ------
 
-## ClusterIP
-
-集群内部访问。
-
-```yaml
-apiVersion: v1
-kind: Service
-
-metadata:
-  name: nginx-svc
-
-spec:
-  type: ClusterIP
-
-  selector:
-    app: nginx
-
-  ports:
-    - port: 80
-      targetPort: 80
-```
-
-------
-
-## NodePort
-
-对外暴露。
-
-```yaml
-type: NodePort
-```
-
-访问：
-
-```bash
-<NodeIP>:30080
-```
-
-------
-
-## LoadBalancer
-
-云厂商负载均衡。
-
-```yaml
-type: LoadBalancer
-```
-
-------
-
-# 十五、ConfigMap
-
-配置文件。
-
-------
-
-## 创建 ConfigMap
-
-```yaml
-apiVersion: v1
-kind: ConfigMap
-
-metadata:
-  name: app-config
-
-data:
-  APP_ENV: prod
-  LOG_LEVEL: info
-```
-
-------
-
-# 十六、Secret
-
-存储敏感信息。
-
-```yaml
-apiVersion: v1
-kind: Secret
-
-metadata:
-  name: db-secret
-
-type: Opaque
-
-data:
-  password: MTIzNDU2
-```
-
-base64 编码：
-
-```bash
-echo -n "123456" | base64
-```
-
-------
-
-# 十七、Ingress
-
-Ingress 提供：
-
-- 域名访问
-- HTTPS
-- 七层路由
-
-------
-
-## Ingress 示例
-
-```yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-
-metadata:
-  name: nginx-ingress
-
-spec:
-  rules:
-    - host: test.com
-
-      http:
-        paths:
-          - path: /
-
-            pathType: Prefix
-
-            backend:
-              service:
-                name: nginx-svc
-
-                port:
-                  number: 80
-```
-
-------
-
-# 十八、多资源 YAML
-
-使用 `---` 分隔。
-
-```yaml
-apiVersion: v1
-kind: Service
-...
-
----
-
-apiVersion: apps/v1
-kind: Deployment
-...
-```
-
-------
-
-# 十九、常用 kubectl 命令
-
-------
-
-## 查看资源
+## 查看 Pod
 
 ```bash
 kubectl get pods
-kubectl get svc
-kubectl get deploy
 ```
 
 ------
@@ -736,6 +834,14 @@ kubectl get deploy
 
 ```bash
 kubectl describe pod nginx
+```
+
+------
+
+## 查看 YAML
+
+```bash
+kubectl get pod nginx -o yaml
 ```
 
 ------
@@ -751,170 +857,106 @@ kubectl logs nginx
 ## 进入容器
 
 ```bash
-kubectl exec -it nginx -- /bin/bash
+kubectl exec -it nginx -- bash
 ```
 
 ------
 
-# 二十、生产最佳实践
-
-------
-
-## 必加 resources
-
-避免资源抢占。
-
-------
-
-## 必加 readinessProbe
-
-防止未启动完成流量进入。
-
-------
-
-## 使用 Deployment 而不是 Pod
-
-Pod 删除后不会自动恢复。
-
-------
-
-## labels 规范化
-
-推荐：
+# 二十八、完整生产级 Pod YAML
 
 ```yaml
-labels:
-  app: nginx
-  version: v1
-  env: prod
-```
-
-------
-
-## 镜像不要使用 latest
-
-推荐：
-
-```yaml
-image: nginx:1.25.5
-```
-
-------
-
-# 二十一、学习路线
-
-推荐顺序：
-
-1. Pod
-2. Deployment
-3. Service
-4. ConfigMap
-5. Secret
-6. Volume
-7. Ingress
-8. StatefulSet
-9. Helm
-10. Operator
-
-------
-
-# 二十二、排错思路
-
-------
-
-## Pod 起不来
-
-```bash
-kubectl describe pod
-kubectl logs
-```
-
-------
-
-## Service 不通
-
-检查：
-
-```bash
-selector
-labels
-targetPort
-```
-
-------
-
-## 镜像拉取失败
-
-```bash
-ImagePullBackOff
-```
-
-检查：
-
-- 镜像名
-- 网络
-- 镜像仓库认证
-
-------
-
-# 二十三、建议重点掌握
-
-面试高频：
-
-- Deployment 滚动更新
-- Service 四层转发
-- Ingress 七层代理
-- ConfigMap/Secret
-- 探针
-- requests/limits
-- StatefulSet
-- PVC/PV
-
-------
-
-# 二十四、一个完整 Web 应用 YAML
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-
-metadata:
-  name: web
-
-spec:
-  replicas: 2
-
-  selector:
-    matchLabels:
-      app: web
-
-  template:
-    metadata:
-      labels:
-        app: web
-
-    spec:
-      containers:
-        - name: nginx
-          image: nginx:1.25
-
-          ports:
-            - containerPort: 80
-
----
 apiVersion: v1
-kind: Service
-
+kind: Pod
 metadata:
-  name: web-svc
-
+  name: nginx-prod
+  labels:
+    app: nginx
+    env: prod
 spec:
-  selector:
-    app: web
-
-  ports:
-    - port: 80
-      targetPort: 80
-
-  type: NodePort
+  containers:
+    - name: nginx
+      image: nginx:1.25
+      ports:
+        - containerPort: 80
+      env:
+        - name: ENV
+          value: prod
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "128Mi"
+        limits:
+          cpu: "500m"
+          memory: "512Mi"
+      readinessProbe:
+        httpGet:
+          path: /
+          port: 80
+        initialDelaySeconds: 5
+      livenessProbe:
+        httpGet:
+          path: /
+          port: 80
+        initialDelaySeconds: 10
+      volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
+  volumes:
+    - name: html
+      emptyDir: {}
 ```
+
+------
+
+# 二十九、面试高频 Pod 知识
+
+重点掌握：
+
+------
+
+## Pod 为什么存在
+
+------
+
+## Pod 共享什么
+
+- Network Namespace
+- IPC
+- Volume
+
+------
+
+## Probe 区别
+
+| Probe     | 作用         |
+| --------- | ------------ |
+| liveness  | 是否活着     |
+| readiness | 是否接流量   |
+| startup   | 是否启动完成 |
+
+------
+
+## requests 与 limits
+
+------
+
+## Pod 为什么不直接使用
+
+因为不会自愈。
+
+------
+
+# 三十、学习建议
+
+下一步建议学习：
+
+1. Deployment
+2. Service
+3. Ingress
+4. Volume/PVC
+5. StatefulSet
+6. CNI 网络
+7. 调度器
+8. kube-proxy
+9. CoreDNS
+10. Helm

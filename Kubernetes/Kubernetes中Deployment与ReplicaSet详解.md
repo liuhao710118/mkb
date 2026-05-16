@@ -522,6 +522,13 @@ kubectl rollout history deployment nginx-deploy
 ```
 ------
 
+## 查看历史版本 指定版本详情
+
+```bash
+kubectl rollout history deployment nginx-deploy --version=<版本号> [-o yaml]
+```
+------
+
 > 每次更新给更新加上备注 通过添加注解的方式来完成 详情：[通过annotate在deployment每次更新的时候添加备注.md](通过annotate在deployment每次更新的时候添加备注.md)
 
 # 十七、回滚 Deployment

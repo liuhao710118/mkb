@@ -448,16 +448,12 @@ mysql-2.mysql-headless.default.svc.cluster.local
 ```yaml
 apiVersion: v1
 kind: Service
-
 metadata:
   name: mysql-headless
-
 spec:
   clusterIP: None
-
   selector:
     app: mysql
-
   ports:
   - port: 3306
 ```
@@ -469,24 +465,18 @@ spec:
 ```yaml
 apiVersion: apps/v1
 kind: StatefulSet
-
 metadata:
   name: mysql
-
 spec:
   serviceName: mysql-headless
-
   replicas: 3
-
   selector:
     matchLabels:
       app: mysql
-
   template:
     metadata:
       labels:
         app: mysql
-
     spec:
       containers:
       - name: mysql
@@ -851,7 +841,7 @@ Broker 需要真实网络身份
 
 ------
 
-# Headless 本质
+## Headless 本质
 
 ```text
 无 VIP Service
@@ -859,7 +849,7 @@ Broker 需要真实网络身份
 
 ------
 
-# 核心能力
+## 核心能力
 
 | 能力        | 说明         |
 | ----------- | ------------ |
@@ -870,7 +860,7 @@ Broker 需要真实网络身份
 
 ------
 
-# 最重要生产组合
+## 最重要生产组合
 
 ```text
 StatefulSet
@@ -880,7 +870,7 @@ Headless Service
 
 ------
 
-# 最典型场景
+## 最典型场景
 
 | 系统          | 原因        |
 | ------------- | ----------- |
@@ -892,7 +882,7 @@ Headless Service
 
 ------
 
-# 一句话理解
+## 一句话理解
 
 ```text
 普通 Service：

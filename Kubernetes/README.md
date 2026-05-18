@@ -34,6 +34,10 @@
 
 [kubernetes中的ingress](Kubernetes_Ingress详解.md)：它是 Kubernetes 对外暴露 Web 服务最核心组件之一。
 
+[kubernetes中的storageclass](Kubernetes StorageClass 详解（详细版）.md)
+
+[节点调度之污点与容忍度](Kubernetes 污点（Taint）与容忍度（Toleration）详解.md) [节点/pod调度之亲和度](Kubernetes 亲和性（Affinity）详解.md)
+
 # 常用命令集
 
 [kubeclt get命令](./commands/kubectl_get命令.md)： Kubernetes 中最基础、最常用的命令之一，用于**查询和列出集群中的资源**

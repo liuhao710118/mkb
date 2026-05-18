@@ -200,30 +200,22 @@ partition: 3
 ```yaml
 apiVersion: apps/v1
 kind: StatefulSet
-
 metadata:
   name: mysql
-
 spec:
   serviceName: mysql-headless
-
   replicas: 5
-
   updateStrategy:
     type: RollingUpdate
-
     rollingUpdate:
       partition: 3
-
   selector:
     matchLabels:
       app: mysql
-
   template:
     metadata:
       labels:
         app: mysql
-
     spec:
       containers:
       - name: mysql

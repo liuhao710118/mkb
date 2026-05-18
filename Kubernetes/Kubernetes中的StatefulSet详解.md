@@ -451,16 +451,12 @@ mysql-2 创建
 ```yaml
 apiVersion: v1
 kind: Service
-
 metadata:
   name: mysql-headless
-
 spec:
   clusterIP: None
-
   selector:
     app: mysql
-
   ports:
   - port: 3306
 ```
@@ -475,38 +471,29 @@ kind: StatefulSet
 
 metadata:
   name: mysql
-
 spec:
   serviceName: mysql-headless
-
   replicas: 3
-
   selector:
     matchLabels:
       app: mysql
-
   template:
     metadata:
       labels:
         app: mysql
-
     spec:
       containers:
       - name: mysql
         image: mysql:8
-
         volumeMounts:
         - name: data
           mountPath: /var/lib/mysql
-
   volumeClaimTemplates:
   - metadata:
       name: data
-
     spec:
       accessModes:
       - ReadWriteOnce
-
       resources:
         requests:
           storage: 10Gi

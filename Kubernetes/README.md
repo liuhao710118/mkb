@@ -26,17 +26,21 @@
 
 [kubernetes中什么是POD？](./Kubernetes中的Pod详解笔记.md) [POD探针详解](./Kubernetes中Pod探针（Probe）详解.md)  [Kubernetes中Pod生命周期详解](Kubernetes中Pod生命周期详解.md) [initContainers、postStart和 preStop详情](initContainers、postStart和 preStop详情.md)
 
-[kubernetes中的deployment](Kubernetes中Deployment与ReplicaSet详解.md) [滚动更新中的暂停pause与resume恢复](滚动更新中的pause与resume.md)
+[kubernetes中的deployment](Kubernetes中Deployment与ReplicaSet详解.md) [滚动更新中的暂停pause与resume恢复](滚动更新中的pause与resume.md) [nodeSelector](Kubernetes nodeSelector使用教程.md)
 
 [Kubernetes中的StatefulSet详解](Kubernetes中的StatefulSet详解.md) [headlessService 返回固定的DNS 直接返回podIP](Kubernetes中的HeadlessService详解.md) [statefulset的灰度发布portation](StatefulSet 中的 Partition（分区更新）详解.md)
 
-[kubernetes中的service](Kubernetes_Service详解.md)：流量分东西流量，和南北流量 东西流量就是集群内部横向通信，南北流量就是外部访问集群内部通信
+[kubernetes中的service](Kubernetes_Service详解.md)：流量分东西流量，和南北流量 东西流量就是集群内部横向通信，南北流量就是外部访问集群内部通信 
 
 [kubernetes中的ingress](Kubernetes_Ingress详解.md)：它是 Kubernetes 对外暴露 Web 服务最核心组件之一。
 
 [kubernetes中的storageclass](Kubernetes StorageClass 详解（详细版）.md)
 
 [节点调度之污点与容忍度](Kubernetes 污点（Taint）与容忍度（Toleration）详解.md) [节点/pod调度之亲和度](Kubernetes 亲和性（Affinity）详解.md)
+
+[一些重要的问题 面试常考](./面试点.md)
+
+
 
 # 常用命令集
 

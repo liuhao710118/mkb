@@ -1,239 +1,456 @@
 # Kubernetes Ingress 详解
 
-在 Kubernetes 中：
+Ingress 是 Kubernetes 中：
+
+> “七层（HTTP/HTTPS）流量入口管理”
+
+它的作用：
 
 ```text
-Ingress
-```
-
-用于：
-
-```text
-HTTP/HTTPS 七层流量入口管理
-```
-
-它是 Kubernetes 对外暴露 Web 服务最核心组件之一。
-
-------
-
-# 一、为什么需要 Ingress
-
-如果没有 Ingress：
-
-每个 Service 都需要：
-
-```text
-NodePort
-或者
-LoadBalancer
-```
-
-问题：
-
-- 端口太多
-- 无法统一域名
-- HTTPS 难管理
-- 无法做路径转发
-- 成本高
-
-因此 Kubernetes 引入：
-
-```text
-Ingress
-```
-
-------
-
-# 二、Ingress 是什么
-
-Ingress 本质：
-
-```text
-HTTP/HTTPS 路由规则
-```
-
-它定义：
-
-- 域名
-- 路径
-- 转发规则
-- HTTPS
-- 负载均衡
-
-------
-
-# 三、Ingress 架构
-
-```text
-Browser
-    ↓
-Ingress Controller
-    ↓
-Ingress Rules
-    ↓
-Service
-    ↓
-Pod
-```
-
-------
-
-# 四、Ingress 不是真正转发流量
-
-很多人误解：
-
-```text
-Ingress ≠ 负载均衡器
-```
-
-Ingress：
-
-```text
-只是规则
-```
-
-真正处理流量的是：
-
-```text
-Ingress Controller
-```
-
-------
-
-# 五、Ingress Controller
-
-常见 Controller：
-
-| 类型          | 说明         |
-| ------------- | ------------ |
-| NGINX Ingress | 最常用       |
-| Traefik       | 云原生       |
-| HAProxy       | 高性能       |
-| Kong          | API 网关     |
-| Istio Gateway | Service Mesh |
-
-------
-
-# 六、最常用：NGINX Ingress
-
-常见部署：
-
-```text
-Ingress-NGINX
+把外部用户请求
+转发到集群内部 Service
 ```
 
 本质：
 
 ```text
-一个 nginx Pod
-```
-
-监听：
-
-```text
-80/443
+K8s 的 HTTP/HTTPS 网关
 ```
 
 ------
 
-# 七、完整流量流程
+# 一、为什么需要 Ingress
+
+先理解：
+
+K8s Pod 默认：
 
 ```text
-用户请求:
-http://test.com/api
+集群外无法访问
+```
 
-↓
+因为：
 
+Pod IP：
+
+- 是集群内部 IP
+- 外部网络不可达
+
+因此：
+
+需要暴露服务。
+
+------
+
+# 二、K8s 暴露服务的几种方式
+
+| 类型         | 层级      | 场景     |
+| ------------ | --------- | -------- |
+| ClusterIP    | 集群内部  | 默认     |
+| NodePort     | 四层      | 测试     |
+| LoadBalancer | 云厂商 LB | 公有云   |
+| Ingress      | 七层 HTTP | 生产主流 |
+
+------
+
+# 三、NodePort 的问题
+
+NodePort：
+
+例如：
+
+```text
+192.168.1.10:30080
+```
+
+问题很多：
+
+------
+
+## 1. 端口难记
+
+每个服务：
+
+一个随机高端口。
+
+------
+
+## 2. 无法统一域名
+
+例如：
+
+```text
+api.company.com
+web.company.com
+```
+
+NodePort 做不到。
+
+------
+
+## 3. 无法做七层路由
+
+不能：
+
+- 根据 URL 转发
+- 根据 Host 转发
+
+------
+
+## 4. HTTPS 麻烦
+
+TLS 证书管理困难。
+
+------
+
+# 四、Ingress 的本质
+
+Ingress：
+
+本身不是流量转发程序。
+
+它只是：
+
+```text
+一套路由规则
+```
+
+真正工作的：
+
+是：
+
+```text
 Ingress Controller
-
-↓
-
-匹配 Ingress Rule
-
-↓
-
-转发到 Service
-
-↓
-
-Service 转发 Pod
 ```
 
 ------
 
-# 八、最简单 Ingress YAML
+# 五、Ingress 架构（非常重要）
+
+```text
+用户
+  ↓
+Ingress Controller
+  ↓
+Ingress Rules
+  ↓
+Service
+  ↓
+Pod
+```
+
+------
+
+# 六、核心组成
+
+Ingress 有两部分：
+
+| 组件               | 作用         |
+| ------------------ | ------------ |
+| Ingress            | 路由规则     |
+| Ingress Controller | 真正转发流量 |
+
+------
+
+# 七、Ingress Controller 是什么
+
+Controller：
+
+是真正：
+
+- 接收 HTTP 请求
+- 转发流量
+- 负载均衡
+
+的软件。
+
+------
+
+# 八、常见 Ingress Controller
+
+生产最常用：
+
+| Controller      | 特点         |
+| --------------- | ------------ |
+| NGINX Ingress   | 最主流       |
+| Traefik         | 云原生       |
+| HAProxy Ingress | 高性能       |
+| Kong            | API 网关     |
+| Istio Gateway   | Service Mesh |
+
+------
+
+# 九、为什么 Ingress 不能单独工作
+
+很多新手：
+
+创建了：
+
+```yaml
+kind: Ingress
+```
+
+然后：
+
+发现访问不了。
+
+原因：
+
+```text
+没有安装 Ingress Controller
+```
+
+Ingress：
+
+只是规则。
+
+Controller：
+
+才是真正干活的。
+
+------
+
+# 十、最主流：NGINX Ingress
+
+最常用的是：
+
+ingress-nginx
+
+本质：
+
+```text
+K8s + NGINX
+```
+
+Controller：
+
+会动态生成：
+
+```text
+nginx.conf
+```
+
+实现流量转发。
+
+------
+
+# 十一、安装 Ingress NGINX
+
+官方：
+
+[ingress-nginx 官方网站](https://kubernetes.github.io/ingress-nginx/?utm_source=chatgpt.com)
+
+------
+
+## 安装（裸机常见）
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
+```
+
+------
+
+# 十二、安装后会发生什么
+
+会创建：
+
+| 资源             | 作用             |
+| ---------------- | ---------------- |
+| Deployment       | nginx-controller |
+| Service          | 暴露入口         |
+| ConfigMap        | nginx 配置       |
+| AdmissionWebhook | 校验 ingress     |
+
+------
+
+# 十三、查看 Controller
+
+```bash
+kubectl get pods -n ingress-nginx
+```
+
+------
+
+# 十四、查看 Service
+
+```bash
+kubectl get svc -n ingress-nginx
+```
+
+通常：
+
+```text
+NodePort
+```
+
+或者：
+
+```text
+LoadBalancer
+```
+
+------
+
+# 十五、Ingress 工作流程（核心）
+
+用户：
+
+访问：
+
+```text
+www.test.com/api
+```
+
+流程：
+
+```text
+DNS
+ ↓
+Ingress Controller
+ ↓
+匹配 Ingress 规则
+ ↓
+转发到 Service
+ ↓
+转发到 Pod
+```
+
+------
+
+# 十六、Ingress 最核心能力
+
+------
+
+## 1. Host 路由
+
+不同域名：
+
+转发不同服务。
+
+例如：
+
+| 域名         | 服务        |
+| ------------ | ----------- |
+| api.test.com | api-service |
+| web.test.com | web-service |
+
+------
+
+## 2. Path 路由
+
+不同路径：
+
+转发不同服务。
+
+例如：
+
+| 路径  | 服务         |
+| ----- | ------------ |
+| /api  | api-service  |
+| /user | user-service |
+
+------
+
+## 3. HTTPS/TLS
+
+支持：
+
+- SSL
+- HTTPS
+- TLS termination
+
+------
+
+## 4. 负载均衡
+
+自动：
+
+转发多个 Pod。
+
+------
+
+# 十七、最简单 Ingress
+
+------
+
+## Service
+
+先有：
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  selector:
+    app: nginx
+  ports:
+  - port: 80
+```
+
+------
+
+## Ingress
 
 ```yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
-
 metadata:
   name: nginx-ingress
 
 spec:
+  ingressClassName: nginx
+
   rules:
-    - host: test.com
+  - host: test.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
 
-      http:
-        paths:
-          - path: /
-
-            pathType: Prefix
-
-            backend:
-              service:
-                name: nginx-svc
-
-                port:
-                  number: 80
+        backend:
+          service:
+            name: nginx-service
+            port:
+              number: 80
 ```
 
 ------
 
-# 九、Ingress YAML 详解
+# 十八、字段详解
 
 ------
 
-# 1. apiVersion
+## ingressClassName
 
 ```yaml
-apiVersion: networking.k8s.io/v1
+ingressClassName: nginx
 ```
 
-Ingress 属于：
+指定：
 
 ```text
-networking API
+哪个 ingress controller 处理
+```
+
+因为：
+
+集群可能有多个 controller。
+
+------
+
+## rules
+
+定义：
+
+```text
+路由规则
 ```
 
 ------
 
-# 2. kind
-
-```yaml
-kind: Ingress
-```
-
-------
-
-# 3. metadata
-
-```yaml
-metadata:
-  name: nginx-ingress
-```
-
-------
-
-# 4. rules
-
-定义路由规则。
-
-------
-
-# 十、host
-
-域名匹配。
+## host
 
 ```yaml
 host: test.com
@@ -241,312 +458,181 @@ host: test.com
 
 表示：
 
-```text
-只有 test.com 才匹配
-```
+匹配域名。
 
 ------
 
-# 十一、path
+## paths
 
-路径匹配。
+定义：
 
-```yaml
-path: /
-```
+URL 路径规则。
 
 ------
 
-# 十二、pathType
+## backend
 
-非常重要。
+最终转发：
+
+哪个 Service。
 
 ------
 
-# Prefix
+# 十九、pathType（重点）
 
-前缀匹配。
+K8s 1.18 后必须写。
+
+------
+
+## 1. Prefix
 
 ```yaml
 pathType: Prefix
 ```
 
-------
+前缀匹配。
 
-# Exact
-
-精确匹配。
-
-```yaml
-pathType: Exact
-```
-
-------
-
-# ImplementationSpecific
-
-由 Controller 自己决定。
-
-------
-
-# 十三、backend
-
-真正转发目标。
-
-------
-
-# Service 名称
-
-```yaml
-service:
-  name: nginx-svc
-```
-
-------
-
-# Service 端口
-
-```yaml
-port:
-  number: 80
-```
-
-------
-
-# 十四、Ingress 必须配合 Service
-
-Ingress：
+例如：
 
 ```text
-不能直接转发 Pod
+/api
 ```
-
-只能：
-
-```text
-Ingress
-    ↓
-Service
-    ↓
-Pod
-```
-
-------
-
-# 十五、完整示例
-
-------
-
-# Deployment
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-
-metadata:
-  name: nginx
-
-spec:
-  replicas: 3
-
-  selector:
-    matchLabels:
-      app: nginx
-
-  template:
-    metadata:
-      labels:
-        app: nginx
-
-    spec:
-      containers:
-        - name: nginx
-          image: nginx
-
-          ports:
-            - containerPort: 80
-```
-
-------
-
-# Service
-
-```yaml
-apiVersion: v1
-kind: Service
-
-metadata:
-  name: nginx-svc
-
-spec:
-  selector:
-    app: nginx
-
-  ports:
-    - port: 80
-      targetPort: 80
-```
-
-------
-
-# Ingress
-
-```yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-
-metadata:
-  name: nginx-ingress
-
-spec:
-  rules:
-    - host: test.com
-
-      http:
-        paths:
-          - path: /
-
-            pathType: Prefix
-
-            backend:
-              service:
-                name: nginx-svc
-
-                port:
-                  number: 80
-```
-
-------
-
-# 十六、访问流程
-
-------
-
-# 1. 浏览器访问
-
-```text
-http://test.com
-```
-
-------
-
-# 2. DNS 解析
-
-解析到：
-
-```text
-Ingress Controller IP
-```
-
-------
-
-# 3. Controller 匹配规则
 
 匹配：
 
 ```text
-host + path
+/api/user
+/api/test
 ```
 
 ------
 
-# 4. 转发到 Service
+## 2. Exact
 
-------
+精确匹配。
 
-# 5. Service 转发 Pod
-
-------
-
-# 十七、路径路由（非常常用）
-
-------
-
-# 示例
-
-```yaml
-rules:
-  - host: test.com
-
-    http:
-      paths:
-        - path: /api
-
-          pathType: Prefix
-
-          backend:
-            service:
-              name: api-svc
-
-              port:
-                number: 80
-
-        - path: /web
-
-          pathType: Prefix
-
-          backend:
-            service:
-              name: web-svc
-
-              port:
-                number: 80
-```
-
-------
-
-# 访问效果
-
-| URL  | 转发    |
-| ---- | ------- |
-| /api | api-svc |
-| /web | web-svc |
-
-------
-
-# 十八、多域名路由
-
-------
-
-# 示例
-
-```yaml
-rules:
-  - host: api.test.com
-    ...
-
-  - host: admin.test.com
-    ...
-```
-
-------
-
-# 十九、HTTPS（重点）
-
-Ingress 最大价值之一：
+例如：
 
 ```text
-统一 HTTPS
+/api
+```
+
+只匹配：
+
+```text
+/api
+```
+
+不匹配：
+
+```text
+/api/user
 ```
 
 ------
 
-# TLS 配置
+## 3. ImplementationSpecific
+
+由 controller 自己决定。
+
+不推荐。
+
+------
+
+# 二十、Host 路由实战
+
+------
+
+## YAML
 
 ```yaml
-spec:
-  tls:
-    - hosts:
-        - test.com
+rules:
+- host: api.test.com
+  http:
+    paths:
+    - path: /
+      pathType: Prefix
+      backend:
+        service:
+          name: api-service
+          port:
+            number: 80
 
-      secretName: tls-secret
+- host: web.test.com
+  http:
+    paths:
+    - path: /
+      pathType: Prefix
+      backend:
+        service:
+          name: web-service
+          port:
+            number: 80
 ```
 
 ------
 
-# 二十、TLS Secret
+# 二十一、效果
 
-证书存储在：
+```text
+api.test.com → api-service
+web.test.com → web-service
+```
+
+------
+
+# 二十二、Path 路由实战
+
+```yaml
+rules:
+- host: test.com
+  http:
+    paths:
+    - path: /api
+      pathType: Prefix
+      backend:
+        service:
+          name: api-service
+          port:
+            number: 80
+
+    - path: /user
+      pathType: Prefix
+      backend:
+        service:
+          name: user-service
+          port:
+            number: 80
+```
+
+------
+
+# 二十三、效果
+
+```text
+test.com/api  → api-service
+test.com/user → user-service
+```
+
+------
+
+# 二十四、TLS/HTTPS（重点）
+
+Ingress：
+
+最重要能力之一：
+
+```text
+HTTPS 统一入口
+```
+
+------
+
+# 二十五、TLS Secret
+
+HTTPS 证书：
+
+必须存放到：
 
 ```text
 Secret
@@ -554,44 +640,263 @@ Secret
 
 ------
 
-# 创建 TLS Secret
+## 创建证书 Secret
 
 ```bash
-kubectl create secret tls tls-secret \
-  --cert=tls.crt \
-  --key=tls.key
+kubectl create secret tls test-tls \
+  --cert=server.crt \
+  --key=server.key
 ```
 
 ------
 
-# 二十一、Ingress Class
-
-Kubernetes 可能有多个 Controller。
-
-因此需要：
-
-```text
-IngressClass
-```
-
-指定。
-
-------
-
-# 示例
+# 二十六、Ingress TLS 配置
 
 ```yaml
 spec:
-  ingressClassName: nginx
+  tls:
+  - hosts:
+    - test.com
+
+    secretName: test-tls
 ```
 
 ------
 
-# 二十二、查看 Ingress
+# 二十七、HTTPS 流程
+
+```text
+用户 HTTPS
+ ↓
+Ingress Controller 解密 TLS
+ ↓
+内部 HTTP 转发
+ ↓
+Service
+```
+
+这叫：
+
+```text
+TLS Termination
+```
 
 ------
 
-# 查看
+# 二十八、默认后端（Default Backend）
+
+如果：
+
+没有匹配规则。
+
+会进入：
+
+```text
+default backend
+```
+
+通常：
+
+返回：
+
+```text
+404
+```
+
+------
+
+# 二十九、Ingress 注解（非常重要）
+
+NGINX Ingress：
+
+大量功能：
+
+通过：
+
+```yaml
+annotations:
+```
+
+实现。
+
+------
+
+# 三十、常见注解
+
+------
+
+## 1. URL 重写
+
+```yaml
+nginx.ingress.kubernetes.io/rewrite-target: /
+```
+
+------
+
+## 2. 强制 HTTPS
+
+```yaml
+nginx.ingress.kubernetes.io/ssl-redirect: "true"
+```
+
+------
+
+## 3. 限流
+
+```yaml
+nginx.ingress.kubernetes.io/limit-rps: "10"
+```
+
+------
+
+## 4. 上传大小
+
+```yaml
+nginx.ingress.kubernetes.io/proxy-body-size: 100m
+```
+
+------
+
+## 5. 超时
+
+```yaml
+nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+```
+
+------
+
+# 三十一、Rewrite 示例（高频）
+
+------
+
+## 需求
+
+```text
+/api/user
+↓
+转发时变成：
+/user
+```
+
+------
+
+## YAML
+
+```yaml
+annotations:
+  nginx.ingress.kubernetes.io/rewrite-target: /$2
+```
+
+配合：
+
+```yaml
+path: /api(/|$)(.*)
+```
+
+------
+
+# 三十二、Ingress 与 Service 区别（面试高频）
+
+------
+
+## Service
+
+四层：
+
+```text
+TCP/UDP
+```
+
+------
+
+## Ingress
+
+七层：
+
+```text
+HTTP/HTTPS
+```
+
+------
+
+# 三十三、Ingress 只能处理 HTTP 吗
+
+基本是。
+
+Ingress：
+
+主要：
+
+```text
+L7 HTTP/HTTPS
+```
+
+TCP/UDP：
+
+需要：
+
+- Service
+- 或特殊配置
+
+------
+
+# 三十四、生产中的典型架构
+
+------
+
+## 裸机环境
+
+```text
+用户
+ ↓
+NodePort
+ ↓
+NGINX Ingress
+ ↓
+Service
+ ↓
+Pod
+```
+
+------
+
+云环境
+
+```text
+用户
+ ↓
+云LB
+ ↓
+Ingress Controller
+ ↓
+Service
+ ↓
+Pod
+```
+
+------
+
+# 三十五、IngressClass（新版本重点）
+
+以前：
+
+通过 annotation：
+
+```yaml
+kubernetes.io/ingress.class: nginx
+```
+
+现在：
+
+推荐：
+
+```yaml
+ingressClassName: nginx
+```
+
+------
+
+# 三十六、查看 Ingress
 
 ```bash
 kubectl get ingress
@@ -599,7 +904,7 @@ kubectl get ingress
 
 ------
 
-# 查看详细信息
+# 三十七、查看详情
 
 ```bash
 kubectl describe ingress nginx-ingress
@@ -607,69 +912,43 @@ kubectl describe ingress nginx-ingress
 
 ------
 
-# 查看 YAML
+# 三十八、排查 Ingress 问题（生产重要）
+
+------
+
+## 1. 查看 ingress
 
 ```bash
-kubectl get ingress nginx-ingress -o yaml
+kubectl get ingress
 ```
 
 ------
 
-# 二十三、安装 NGINX Ingress
-
-常见安装：
-
-------
-
-# Helm
+## 2. 查看 controller
 
 ```bash
-helm install ingress-nginx ingress-nginx/ingress-nginx
+kubectl get pods -n ingress-nginx
 ```
 
 ------
 
-# 官方 YAML
+## 3. 查看 controller 日志
 
 ```bash
-kubectl apply -f deploy.yaml
+kubectl logs -n ingress-nginx pod-name
 ```
 
 ------
 
-# 二十四、Ingress 常见问题
+## 4. 查看 service
 
-------
-
-# 1. Ingress 不生效
-
-最常见：
-
-```text
-没安装 Ingress Controller
+```bash
+kubectl get svc
 ```
 
 ------
 
-# 2. 404
-
-说明：
-
-```text
-规则未匹配
-```
-
-检查：
-
-- host
-- path
-- ingressClass
-
-------
-
-# 3. Service 无 endpoints
-
-检查：
+## 5. 查看 endpoints
 
 ```bash
 kubectl get ep
@@ -677,241 +956,197 @@ kubectl get ep
 
 ------
 
-# 4. HTTPS 失败
-
-检查：
-
-- Secret
-- 域名
-- 证书
+# 三十九、常见错误
 
 ------
 
-# 二十五、Ingress 与 Service 区别
+## 1. 没装 ingress controller
 
-| Ingress    | Service  |
-| ---------- | -------- |
-| 七层       | 四层     |
-| HTTP/HTTPS | TCP/UDP  |
-| 域名路由   | Pod 转发 |
-| SSL        | 无       |
+最常见。
 
 ------
 
-# 二十六、Ingress 与 Gateway API
+## 2. Service selector 错误
 
-现代 Kubernetes：
+导致：
 
 ```text
-Ingress 正逐渐被 Gateway API 替代
+Endpoints为空
 ```
 
 ------
 
-# Gateway API 更强：
+## 3. DNS 未解析
 
-- 更标准
-- 更灵活
-- 更适合云原生
+域名：
 
-------
-
-# 二十七、Ingress 常用注解
-
-NGINX Ingress 常用：
+没指向 ingress IP。
 
 ------
 
-# URL Rewrite
+## 4. pathType 缺失
 
-```yaml
-annotations:
-  nginx.ingress.kubernetes.io/rewrite-target: /
-```
+新版本：
 
-------
-
-# 限流
-
-```yaml
-annotations:
-  nginx.ingress.kubernetes.io/limit-rps: "10"
-```
+必须写。
 
 ------
 
-# Body 大小
+## 5. ingressClassName 不匹配
 
-```yaml
-annotations:
-  nginx.ingress.kubernetes.io/proxy-body-size: 50m
-```
+Controller：
 
-------
-
-# 二十八、生产最佳实践
+不会接管。
 
 ------
 
-# 1. 使用 HTTPS
-
-必须。
+# 四十、生产最佳实践
 
 ------
 
-# 2. 使用 ClusterIP Service
+## 1. HTTPS 必开
 
-不要：
+生产：
 
-```text
-Ingress + NodePort
-```
-
-直接暴露业务。
+必须 TLS。
 
 ------
 
-# 3. 配置 readinessProbe
+## 2. 多副本 ingress-controller
 
-避免：
-
-```text
-未启动完成接流量
-```
+避免单点。
 
 ------
 
-# 4. 使用 cert-manager
+## 3. 配合 HPA
 
-自动签发证书。
-
-------
-
-# 5. 配置限流
-
-防止：
-
-- CC
-- 爬虫
-- 恶意请求
+自动扩缩容。
 
 ------
 
-# 二十九、生产架构
+## 4. 使用 ExternalDNS
 
-典型：
-
-```text
-Internet
-    ↓
-SLB/ELB
-    ↓
-Ingress Controller
-    ↓
-Ingress Rules
-    ↓
-Service
-    ↓
-Pod
-```
+自动同步 DNS。
 
 ------
 
-# 三十、Ingress Controller 本质
+## 5. 配合 Cert-Manager
+
+自动签发 HTTPS 证书。
+
+常配合：
+
+cert-manager
+
+------
+
+# 四十一、Ingress 的本质（最重要）
 
 本质：
 
 ```text
-监听 Kubernetes API
+HTTP 路由规则
 ```
 
-发现：
+真正干活：
+
+是：
 
 ```text
-Ingress 资源变化
-```
-
-动态生成：
-
-```text
-Nginx 配置
-```
-
-然后：
-
-```text
-reload nginx
+Ingress Controller
 ```
 
 ------
 
-# 三十一、面试高频问题
+# 四十二、面试高频问题
 
 ------
 
-# 1. Ingress 为什么存在
+## Q1：Ingress 和 Service 区别
 
-统一：
-
-```text
-域名
-HTTPS
-七层路由
-```
+| Service  | Ingress    |
+| -------- | ---------- |
+| 四层     | 七层       |
+| TCP/UDP  | HTTP/HTTPS |
+| 负载均衡 | 路由转发   |
 
 ------
 
-# 2. Ingress 与 Service 区别
-
-| Ingress | Service |
-| ------- | ------- |
-| 七层    | 四层    |
-
-------
-
-# 3. Ingress 为什么必须 Controller
+## Q2：Ingress 为什么不能直接工作
 
 因为：
 
 ```text
-Ingress 只是规则
+需要 Ingress Controller
 ```
 
 ------
 
-# 4. Ingress 如何实现 HTTPS
+## Q3：Ingress 能做什么
 
-通过：
+- 域名路由
+- 路径路由
+- HTTPS
+- 限流
+- Rewrite
+
+------
+
+## Q4：Ingress Controller 本质是什么
+
+本质：
 
 ```text
-TLS Secret
+反向代理
 ```
 
-------
-
-# 5. Ingress 如何实现路径转发
-
-通过：
+最常见：
 
 ```text
-host + path
+NGINX
 ```
-
-匹配。
 
 ------
 
-# 三十二、建议继续学习
+# 四十三、总结（核心记忆）
 
-推荐继续：
+------
 
-1. CoreDNS
-2. kube-proxy
-3. CNI 网络
-4. StatefulSet
-5. ConfigMap
-6. Secret
-7. PV/PVC
-8. Helm
-9. HPA
-10. Gateway API
+## Ingress
+
+本质：
+
+```text
+HTTP/HTTPS 路由规则
+```
+
+------
+
+## Ingress Controller
+
+本质：
+
+```text
+真正转发流量的程序
+```
+
+------
+
+## 最常见功能
+
+| 功能      | 示例         |
+| --------- | ------------ |
+| Host 路由 | api.test.com |
+| Path 路由 | /api         |
+| HTTPS     | TLS          |
+| Rewrite   | URL 重写     |
+| 限流      | rate limit   |
+
+------
+
+## 最重要认知
+
+```text
+Ingress 不是代理
+Ingress Controller 才是代理
+```

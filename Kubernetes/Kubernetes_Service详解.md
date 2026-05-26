@@ -482,13 +482,13 @@ nginx-svc -> 10.244.1.5:80
 
 ------
 
-# Pod DNS
+## Pod DNS
 
 Kubernetes 自动提供 DNS。
 
 ------
 
-# Service 访问方式
+## Service 访问方式
 
 ```text
 service-name
@@ -502,7 +502,7 @@ curl http://nginx-svc
 
 ------
 
-# 完整域名
+## 完整域名
 
 ```text
 service.namespace.svc.cluster.local
@@ -510,7 +510,7 @@ service.namespace.svc.cluster.local
 
 ------
 
-# 示例
+## 示例
 
 ```text
 nginx.default.svc.cluster.local
@@ -522,13 +522,13 @@ nginx.default.svc.cluster.local
 
 ------
 
-# 什么是 Headless
+## 什么是 Headless
 
 没有 ClusterIP。
 
 ------
 
-# YAML
+## YAML
 
 ```yaml
 spec:
@@ -537,7 +537,7 @@ spec:
 
 ------
 
-# 为什么需要
+## 为什么需要
 
 直接返回：
 
@@ -547,7 +547,7 @@ Pod IP
 
 ------
 
-# 用途
+## 用途
 
 - StatefulSet
 - MySQL 集群
@@ -578,13 +578,13 @@ Headless：
 
 ------
 
-# 默认
+## 默认
 
 随机负载均衡。
 
 ------
 
-# 开启会话保持
+## 开启会话保持
 
 ```yaml
 sessionAffinity: ClientIP
@@ -596,11 +596,11 @@ sessionAffinity: ClientIP
 
 ------
 
-# Deployment 创建 Pod
+## Deployment 创建 Pod
 
 ------
 
-# Service 选择 Pod
+## Service 选择 Pod
 
 通过：
 
@@ -616,7 +616,7 @@ selector + labels
 
 ------
 
-# Deployment
+## Deployment
 
 ```yaml
 apiVersion: apps/v1
@@ -648,7 +648,7 @@ spec:
 
 ------
 
-# Service
+## Service
 
 ```yaml
 apiVersion: v1
@@ -674,7 +674,7 @@ spec:
 
 ------
 
-# 查看 svc
+## 查看 svc
 
 ```bash
 kubectl get svc
@@ -682,7 +682,7 @@ kubectl get svc
 
 ------
 
-# 查看详细信息
+## 查看详细信息
 
 ```bash
 kubectl describe svc nginx-svc
@@ -690,7 +690,7 @@ kubectl describe svc nginx-svc
 
 ------
 
-# 查看 endpoints
+## 查看 endpoints
 
 ```bash
 kubectl get ep
@@ -698,7 +698,7 @@ kubectl get ep
 
 ------
 
-# 查看 YAML
+## 查看 YAML
 
 ```bash
 kubectl get svc nginx-svc -o yaml
@@ -710,7 +710,7 @@ kubectl get svc nginx-svc -o yaml
 
 ------
 
-# 1. Service 无法访问
+## 1. Service 无法访问
 
 检查：
 
@@ -732,7 +732,7 @@ selector 不匹配
 
 ------
 
-# 2. Pod 没端口
+## 2. Pod 没端口
 
 检查：
 
@@ -742,7 +742,7 @@ targetPort
 
 ------
 
-# 3. DNS 失败
+## 3. DNS 失败
 
 检查：
 
@@ -760,7 +760,7 @@ CoreDNS
 
 ------
 
-# 4. NodePort 无法访问
+## 4. NodePort 无法访问
 
 检查：
 
@@ -780,7 +780,7 @@ CoreDNS
 
 ------
 
-# Service
+## Service
 
 负责：
 
@@ -790,7 +790,7 @@ Pod 访问
 
 ------
 
-# Ingress
+## Ingress
 
 负责：
 
@@ -817,13 +817,13 @@ HTTPS
 
 ------
 
-# 1. Web 服务使用 ClusterIP + Ingress
+## 1. Web 服务使用 ClusterIP + Ingress
 
 不要直接 NodePort。
 
 ------
 
-# 2. 数据库使用 Headless
+## 2. 数据库使用 Headless
 
 例如：
 
@@ -833,7 +833,7 @@ HTTPS
 
 ------
 
-# 3. labels 规范化
+## 3. labels 规范化
 
 ```yaml
 labels:
@@ -843,7 +843,7 @@ labels:
 
 ------
 
-# 4. readinessProbe 必须配置
+## 4. readinessProbe 必须配置
 
 避免：
 
@@ -871,7 +871,7 @@ Pod
 
 ------
 
-# 1. Service 为什么存在
+## 1. Service 为什么存在
 
 因为：
 
@@ -881,7 +881,7 @@ Pod IP 不固定
 
 ------
 
-# 2. Service 如何找到 Pod
+## 2. Service 如何找到 Pod
 
 通过：
 
@@ -891,7 +891,7 @@ selector + labels
 
 ------
 
-# 3. Service 如何实现负载均衡
+## 3. Service 如何实现负载均衡
 
 通过：
 
@@ -901,7 +901,7 @@ kube-proxy + iptables/ipvs
 
 ------
 
-# 4. Headless Service 用途
+## 4. Headless Service 用途
 
 用于：
 
@@ -913,7 +913,7 @@ MySQL
 
 ------
 
-# 5. ClusterIP 为什么能访问
+## 5. ClusterIP 为什么能访问
 
 因为：
 

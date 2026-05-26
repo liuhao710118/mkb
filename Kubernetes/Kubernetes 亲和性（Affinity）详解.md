@@ -233,11 +233,20 @@ spec:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
-        - matchExpressions:
-          - key: disktype
+        - matchExpressions: # 多个matchExpressions 有任意一个满足就行 是 或 or 的关系
+          - key: disktype # 多个key的情况是需要都要满足的 是 且 and 的关系
             operator: In
             values:
             - ssd
+          - key: memory
+            operator: In
+            values:
+            - 16G
+        - matchExpressions:
+          - key: gpu
+            operator: In
+            values:
+            - rtx5060
 
   containers:
   - name: nginx
@@ -715,7 +724,6 @@ affinity:
           operator: In
           values:
           - nginx
-
       topologyKey: kubernetes.io/hostname
 ```
 

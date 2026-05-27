@@ -287,6 +287,8 @@ K8s 支持三种探针方式：
 
 ------
 
+> **响应状态码 200–399**：成功 其它状态码 / 超时 / 连接拒绝：失败
+
 ## 示例
 
 ```yaml
@@ -465,17 +467,14 @@ spec:
   containers:
   - name: app
     image: myapp:v1
-
     ports:
     - containerPort: 8080
-
     startupProbe:
       httpGet:
         path: /actuator/health
         port: 8080
       failureThreshold: 30
       periodSeconds: 10
-
     livenessProbe:
       httpGet:
         path: /actuator/health
@@ -483,7 +482,6 @@ spec:
       initialDelaySeconds: 30
       periodSeconds: 10
       timeoutSeconds: 3
-
     readinessProbe:
       httpGet:
         path: /actuator/health

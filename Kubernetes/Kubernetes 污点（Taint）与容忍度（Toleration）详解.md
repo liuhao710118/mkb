@@ -386,6 +386,8 @@ Pod 能容忍 60 秒
 
 # 十、operator 详解
 
+
+
 容忍规则中的 operator：
 
 | operator | 含义                   |
@@ -395,7 +397,7 @@ Pod 能容忍 60 秒
 
 ------
 
-# 十一、Equal
+# 十一、Equal、Exists
 
 ## 示例
 
@@ -413,9 +415,7 @@ tolerations:
 gpu=true
 ```
 
-------
 
-# 十二、Exists
 
 ## 示例
 
@@ -435,6 +435,22 @@ gpu=abc
 ```
 
 只看 key。
+
+
+
+# 十二、容忍tolerations也可以以effect作为条件
+
+```
+tolerations:
+- effect: NoSchedule 代表容忍所有效果为NoSchedule的污点
+  operator: Exists
+- key: CriticalAddonsOnly
+  operator: Exists
+- effect: NoExecute 代表容忍所有效果为NoExecute的污点
+  operator: Exists
+```
+
+
 
 ------
 

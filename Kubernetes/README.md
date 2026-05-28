@@ -30,6 +30,10 @@
 
 [Kubernetes中的StatefulSet详解](Kubernetes中的StatefulSet详解.md) [headlessService 返回固定的DNS 直接返回podIP](Kubernetes中的HeadlessService详解.md) [statefulset的灰度发布portation](StatefulSet 中的 Partition（分区更新）详解.md) [StatefulSet 的 Rollout & 回滚](StatefulSet 的 Rollout & 回滚.md)
 
+[DaemonSet 是什么](DaemonSet 是什么.md)
+
+[deployment适合无状态应用，statefulset适合有状态，daemonset是为了节点服务的 保证每个节点都有一个 Pod](Deployment,Statefulset,Daemonset快速对照表.md)
+
 [kubernetes中的service](Kubernetes_Service详解.md)：流量分东西流量，和南北流量 东西流量就是集群内部横向通信，南北流量就是外部访问集群内部通信 
 
 [kubernetes中的ingress](Kubernetes_Ingress详解.md)：它是 Kubernetes 对外暴露 Web 服务最核心组件之一。

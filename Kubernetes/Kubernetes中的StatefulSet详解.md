@@ -104,14 +104,14 @@ Deployment 不适合
 
 # 二、StatefulSet 核心能力
 
-| 能力          | 说明            |
-| ------------- | --------------- |
-| 固定 Pod 名称 | mysql-0/mysql-1 |
-| 固定 DNS      | 永久域名        |
-| 固定存储      | PVC 不丢        |
-| 顺序启动      | 按序号          |
-| 顺序删除      | 逆序            |
-| Pod 唯一身份  | Stateful        |
+| 能力          | 说明                                                |
+| ------------- | --------------------------------------------------- |
+| 固定 Pod 名称 | mysql-0/mysql-1                                     |
+| 固定 DNS      | 永久域名                                            |
+| 固定存储      | PVC 不丢 (因为每次重新创建对应的名称什么的都不变啊) |
+| 顺序启动      | 按序号                                              |
+| 顺序删除      | 逆序                                                |
+| Pod 唯一身份  | Stateful                                            |
 
 ------
 
@@ -468,7 +468,6 @@ spec:
 ```yaml
 apiVersion: apps/v1
 kind: StatefulSet
-
 metadata:
   name: mysql
 spec:

@@ -154,22 +154,17 @@ Deployment
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
-
 metadata:
   name: nginx-deploy
-
 spec:
   replicas: 3
-
   selector:
     matchLabels:
       app: nginx
-
   template:
     metadata:
       labels:
         app: nginx
-
     spec:
       containers:
         - name: nginx
@@ -525,7 +520,7 @@ kubectl rollout history deployment nginx-deploy
 ## 查看历史版本 指定版本详情
 
 ```bash
-kubectl rollout history deployment nginx-deploy --version=<版本号> [-o yaml]
+kubectl rollout history deployment nginx-deploy --revision=<版本号> [-o yaml]
 ```
 ------
 
@@ -819,59 +814,44 @@ labels:
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
-
 metadata:
   name: nginx-prod
-
 spec:
   replicas: 3
-
   strategy:
     type: RollingUpdate
-
     rollingUpdate:
       maxSurge: 1
       maxUnavailable: 1
-
   selector:
     matchLabels:
       app: nginx
-
   template:
     metadata:
       labels:
         app: nginx
-
     spec:
       containers:
         - name: nginx
-
           image: nginx:1.25
-
           ports:
             - containerPort: 80
-
           resources:
             requests:
               cpu: "100m"
               memory: "128Mi"
-
             limits:
               cpu: "500m"
               memory: "512Mi"
-
           readinessProbe:
             httpGet:
               path: /
               port: 80
-
             initialDelaySeconds: 5
-
           livenessProbe:
             httpGet:
               path: /
               port: 80
-
             initialDelaySeconds: 10
 ```
 

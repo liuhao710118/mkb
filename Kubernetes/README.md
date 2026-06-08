@@ -40,9 +40,9 @@
 
 [kubernetes中的ingress](Kubernetes_Ingress详解.md)：它是 Kubernetes 对外暴露 Web 服务最核心组件之一。
 
-[configmap与secret](Kubernetes ConfigMap 与 Secret 详解（笔记版）.md) [Kubernetes Volume 与 PersistentVolume（PV）详解](Kubernetes Volume 与 PersistentVolume（PV）详解.md)
+[configmap与secret](Kubernetes ConfigMap 与 Secret 详解（笔记版）.md) [Kubernetes Volume 与 PersistentVolume（PV）详解](Kubernetes Volume 与 PersistentVolume（PV）详解.md) [PV 上的 accessModes 和 PVC 上的 accessModes 含义并不完全一样。](PV 上的 accessModes 和 PVC 上的 accessModes 含义并不完全一样.md)
 
-[kubernetes中的storageclass](Kubernetes StorageClass 详解（详细版）.md)
+[Kubernetes 支持的 4 种 AccessMode](Kubernetes 支持的 4 种 AccessMode.md) [PV如何从Released变为Available状态](PV如何从Released变为Available状态.md) [Kubernetes Volume、PV、PVC 高频面试题汇总](Kubernetes Volume、PV、PVC 高频面试题汇总.md) [kubernetes中的storageclass](Kubernetes StorageClass 详解（详细版）.md)
 
 [节点调度之污点与容忍度](Kubernetes 污点（Taint）与容忍度（Toleration）详解.md) [节点/pod调度之亲和度](Kubernetes 亲和性（Affinity）详解.md)
 

@@ -241,16 +241,12 @@ myservice.default.svc.cluster.local
 ```yaml
 apiVersion: v1
 kind: Service
-
 metadata:
   name: nginx-headless
-
 spec:
   clusterIP: None
-
   selector:
     app: nginx
-
   ports:
   - port: 80
 ```

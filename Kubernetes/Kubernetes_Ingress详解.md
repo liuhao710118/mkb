@@ -398,17 +398,14 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: nginx-ingress
-
 spec:
   ingressClassName: nginx
-
   rules:
   - host: test.com
     http:
       paths:
       - path: /
         pathType: Prefix
-
         backend:
           service:
             name: nginx-service

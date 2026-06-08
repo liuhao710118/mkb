@@ -269,20 +269,16 @@ nodeName: xxx
 ```yaml
 apiVersion: apps/v1
 kind: DaemonSet
-
 metadata:
   name: node-exporter
-
 spec:
   selector:
     matchLabels:
       app: node-exporter
-
   template:
     metadata:
       labels:
         app: node-exporter
-
     spec:
       containers:
       - name: exporter

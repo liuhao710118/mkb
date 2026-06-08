@@ -26,7 +26,9 @@
 
 [kubernetes中什么是POD？](./Kubernetes中的Pod详解笔记.md) [POD探针详解](./Kubernetes中Pod探针（Probe）详解.md)  [Kubernetes中Pod生命周期详解](Kubernetes中Pod生命周期详解.md) [initContainers、postStart和 preStop详情](initContainers、postStart和 preStop详情.md)
 
-[kubernetes中的deployment](Kubernetes中Deployment与ReplicaSet详解.md) [滚动更新中的暂停pause与resume恢复](滚动更新中的pause与resume.md) [nodeSelector](Kubernetes nodeSelector使用教程.md)
+[kubernetes中的deployment](Kubernetes中Deployment与ReplicaSet详解.md) [滚动更新中的暂停pause与resume恢复](滚动更新中的pause与resume.md) [nodeSelector](Kubernetes nodeSelector使用教程.md) 
+
+[Kubernetes HPA（Horizontal Pod Autoscaler）](Kubernetes HPA（Horizontal Pod Autoscaler）超详细讲解.md) [HPA + Prometheus 自定义指标详解（生产级）](HPA + Prometheus 自定义指标详解（生产级）.md) [HPA生产中最常用的精简版（推荐）](HPA生产中最常用的精简版（推荐）.md)
 
 [Kubernetes中的StatefulSet详解](Kubernetes中的StatefulSet详解.md) [headlessService 返回固定的DNS 直接返回podIP](Kubernetes中的HeadlessService详解.md) [statefulset的灰度发布portation](StatefulSet 中的 Partition（分区更新）详解.md) [StatefulSet 的 Rollout & 回滚](StatefulSet 的 Rollout & 回滚.md)
 
@@ -37,6 +39,8 @@
 [kubernetes中的service](Kubernetes_Service详解.md)：流量分东西流量，和南北流量 东西流量就是集群内部横向通信，南北流量就是外部访问集群内部通信 
 
 [kubernetes中的ingress](Kubernetes_Ingress详解.md)：它是 Kubernetes 对外暴露 Web 服务最核心组件之一。
+
+[configmap与secret](Kubernetes ConfigMap 与 Secret 详解（笔记版）.md) [Kubernetes Volume 与 PersistentVolume（PV）详解](Kubernetes Volume 与 PersistentVolume（PV）详解.md)
 
 [kubernetes中的storageclass](Kubernetes StorageClass 详解（详细版）.md)
 
@@ -69,3 +73,5 @@
 # 帮助
 
 [netshoot网络排障工具](./netshoot网络排障工具.md)：netshoot 是 Kubernetes / Docker 场景下非常经典的网络排障工具镜像 配合 **`kubectl debug`**最好
+
+[kubernetes的包管理工具helm](Helm 命令使用教程（超详细版）.md)：Helm 是 Kubernetes 的包管理工具，相当于 Linux 中的 yum、apt，或者 Python 中的 pip

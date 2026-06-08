@@ -676,22 +676,17 @@ Deployment 已经封装
 ```yaml
 apiVersion: apps/v1
 kind: ReplicaSet
-
 metadata:
   name: nginx-rs
-
 spec:
   replicas: 3
-
   selector:
     matchLabels:
       app: nginx
-
   template:
     metadata:
       labels:
         app: nginx
-
     spec:
       containers:
         - name: nginx

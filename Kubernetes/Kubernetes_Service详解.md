@@ -131,14 +131,11 @@ selector:
 ```yaml
 apiVersion: v1
 kind: Service
-
 metadata:
   name: nginx-svc
-
 spec:
   selector:
     app: nginx
-
   ports:
     - port: 80
       targetPort: 80
@@ -387,7 +384,7 @@ spec:
 
 ### 作用
 
-DNS 别名。
+> 将外部不属于k8s集群的服务 纳入到k8s网络规范中 例如外部www.bilibil.com 可以直接映射到内部blibili.service 后面如果外部厂商域名有变动 就只需要改一个service就好了
 
 ------
 
@@ -396,14 +393,11 @@ DNS 别名。
 ```yaml
 apiVersion: v1
 kind: Service
-
 metadata:
-  name: mysql
-
+  name: bilibli-service
 spec:
   type: ExternalName
-
-  externalName: db.example.com
+  externalName: www.bilibli.com
 ```
 
 ------
